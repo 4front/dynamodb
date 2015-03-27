@@ -17,63 +17,48 @@ describe('Version', function() {
 
 	beforeEach(function() {
 		this.versionDefaults = {
+			versionId: shortid.generate(),
 			appId: shortid.generate(),
 			userId: shortid.generate(),
 			versionNum: 1,
 			name: 'v1',
 			message: 'deployment message',
-			deployments: {
-				prod: 1
-			}
+			environments: ['prod']
 		};
 	});
 
 	it('create version', function(done) {
-		var versionData = {
-			versionId: shortid.generate(),
-			versionNum: 1,
-			name: 'v1',
-			userId: shortid.generate(),
-			appId: shortid.generate(),
-			deployments: {
-				prod: 1,
-				test: .5
-			}
-		};
-
+		var self = this;
+		
 		async.series([
 			function(cb) {
-				dynamo.createVersion(versionData, function(err, version) {
+				dynamo.createVersion(self.versionDefaults, function(err, version) {
 					if (err) return cb(err);
-					assert.equal(version.versionId, versionData.versionId);
+					assert.equal(version.versionId, self.versionDefaults.versionId);
 					cb();
 				});
 			},
 			function(cb) {
-				dynamo.getVersion(versionData.versionId, function(err, version) {
+				dynamo.getVersion(self.versionDefaults.versionId, function(err, version) {
 					if (err) return cb(err);
 
 					console.log(JSON.stringify(version));
-					assert.ok(_.isEqual(_.omit(version, 'created'), versionData));
+					assert.ok(_.isEqual(_.omit(version, 'created'), self.versionDefaults));
 					cb();
 				});
 			}
 		], done);
 	});
 
-	it('find all versions deployed to an environment', function(done) {
+	it('lists versions', function(done) {
 		var self = this;
 
 		// Create 3 versions, two of which are deployed to "prod" environment
-		var versionData = _.map(['prod', 'test', 'prod'], function(env, i) {
-			var v = _.extend({}, self.versionDefaults, {
+		var versionData = _.times(3, function(i) {
+			return _.extend({}, self.versionDefaults, {
 				versionId: shortid.generate(), 
-				versionNum: i + 1,
-				deployments: {}
+				versionNum: i + 1
 			});
-
-			v.deployments[env] = 1;
-			return v;
 		});
 
 		async.each(versionData, function(data, cb) {
@@ -81,7 +66,33 @@ describe('Version', function() {
 		}, function(err) {
 			if (err) return done(err);
 
-			dynamo.versionsDeployedToEnv(self.versionDefaults.appId, 'prod', function(err, versions) {
+			dynamo.listVersions({appId: self.versionDefaults.appId, limit: 20}, function(err, versions) {
+				if (err) return done(err);
+
+				assert.equal(3, versions.length);
+				done();
+			});
+		});
+	});
+
+	it('find all versions in an environment', function(done) {
+		var self = this;
+
+		// Create 3 versions, two of which are deployed to "prod" environment
+		var versionData = _.map(['prod', 'test', 'prod'], function(env, i) {
+			return _.extend({}, self.versionDefaults, {
+				versionId: shortid.generate(), 
+				versionNum: i + 1,
+				environments: [env]
+			});
+		});
+
+		async.each(versionData, function(data, cb) {
+			dynamo.createVersion(data, cb);
+		}, function(err) {
+			if (err) return done(err);
+
+			dynamo.listVersions({appId: self.versionDefaults.appId, env: 'prod'}, function(err, versions) {
 				if (err) return done(err);
 
 				assert.equal(2, versions.length);
