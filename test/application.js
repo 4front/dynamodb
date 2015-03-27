@@ -82,31 +82,30 @@ describe('Application', function() {
 				dynamo.createApplication(self.appData, function(err) {
 					assert.ok(err);
 					assert.equal(err.code, "appNameExists");
-					done();
+					cb();
 				});
 			}
-		]);
+		], done);
 	});
 
-	it('updates deployed versions', function(done) {
-		var appData = this.appData;
+	it('deletes application', function(done) {
+		var appData = _.extend(this.appData, {
+			domains: ['www.' + shortid.generate() + '.com']
+		});
 
 		async.series([
 			function(cb) {
 				dynamo.createApplication(appData, cb);
 			},
 			function(cb) {
-				// direct all prod traffic to v10
-				dynamo.updateDeployedVersions(appData.appId, 'prod', {'v10': 1}, cb);
+				dynamo.deleteApplication(appData.appId, cb);
 			},
 			function(cb) {
 				dynamo.getApplication(appData.appId, function(err, app) {
 					if (err) return cb(err);
-
-					assert.ok(_.isEqual(app.deployedVersions.test, {'v3': 1}));
-					assert.ok(_.isEqual(app.deployedVersions.prod, {'v10': 1}));
+					assert.ok(_.isNull(app));
 					cb();
-				});
+				})
 			}
 		], done);
 	});
