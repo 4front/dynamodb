@@ -19,6 +19,7 @@
     "vogels": "^2.0.0-rc8"
   },
   "devDependencies": {
-    "mocha": "^2.2.1"
+    "mocha": "^2.2.1",
+    "shortid": "^2.2.1"
   }
 }
