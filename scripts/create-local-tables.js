@@ -9,9 +9,11 @@ var _ = require('lodash'),
   modelDefinitions = require('../lib/models');
 
 // Connect to DynamoDB local
-var dynamoDb = new AWS.DynamoDB({ 
+var dynamoDb = new AWS.DynamoDB({
   region: 'us-west-2',
-  endpoint: 'http://localhost:8000'
+  endpoint: 'http://localhost:8000',
+  accessKeyId: '4front',
+  secretAccessKey: 'accessKeySecret'
 });
 
 vogels.dynamoDriver(dynamoDb);

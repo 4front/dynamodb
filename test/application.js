@@ -3,13 +3,10 @@ var _ = require('lodash');
 var async = require('async');
 var shortid = require('shortid');
 var assert = require('assert');
-var DynamoDb = require('../lib/dynamo');
+var helper = require('./helper');
 
 describe('Application', function() {
-	var dynamo = new DynamoDb({ 
-	  region: 'us-west-2',
-	  endpoint: 'http://localhost:8000'
-	});
+	var dynamo = helper.newLocalDynamo();
 
 	beforeEach(function() {
 		this.appData = {
@@ -28,7 +25,7 @@ describe('Application', function() {
 			}
 		};
 	});
-	
+
 	it('create and retrieve application', function(done) {
 		var appData = _.extend(this.appData, {
 			domains: ['www.' + shortid.generate() + '.com']
@@ -67,7 +64,7 @@ describe('Application', function() {
 
 					assert.ok(!app.domains);
 					cb();
-				}); 
+				});
 			}
 		], done);
 	});

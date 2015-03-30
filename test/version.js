@@ -3,17 +3,10 @@ var _ = require('lodash');
 var async = require('async');
 var shortid = require('shortid');
 var assert = require('assert');
-var DynamoDb = require('../lib/dynamo');
-
+var helper = require('./helper');
 
 describe('Version', function() {
-	var dynamo;
-	before(function() {
-		dynamo = new DynamoDb({ 
-		  region: 'us-west-2',
-		  endpoint: 'http://localhost:8000'
-		});
-	});
+	var dynamo = helper.newLocalDynamo();
 
 	beforeEach(function() {
 		this.versionDefaults = {
@@ -29,7 +22,7 @@ describe('Version', function() {
 
 	it('create version', function(done) {
 		var self = this;
-		
+
 		async.series([
 			function(cb) {
 				dynamo.createVersion(self.versionDefaults, function(err, version) {
@@ -55,7 +48,7 @@ describe('Version', function() {
 		// Create 3 versions, two of which are deployed to "prod" environment
 		var versionData = _.times(3, function(i) {
 			return _.extend({}, self.versionDefaults, {
-				versionId: shortid.generate(), 
+				versionId: shortid.generate(),
 				versionNum: i + 1
 			});
 		});
@@ -80,7 +73,7 @@ describe('Version', function() {
 		// Create 3 versions, two of which are deployed to "prod" environment
 		var versionData = _.map(['prod', 'test', 'prod'], function(env, i) {
 			return _.extend({}, self.versionDefaults, {
-				versionId: shortid.generate(), 
+				versionId: shortid.generate(),
 				versionNum: i + 1,
 				environments: [env]
 			});
@@ -131,6 +124,28 @@ describe('Version', function() {
 					// verify that the test environment remained unchanged.
 					assert.ok(_.isEqual(app.deployedVersions.test, {'v3': 1}));
 					assert.ok(_.isEqual(app.deployedVersions.prod, {'v1': .5, 'v10': .5}));
+					cb();
+				});
+			}
+		], done);
+	});
+
+	it('gets next version num', function(done) {
+		var self = this;
+		var appId = shortid.generate();
+		async.series([
+			function(cb) {
+				dynamo.nextVersionNum(appId, function(err, versionNum) {
+					assert.equal(1, versionNum);
+					cb();
+				})
+			},
+			function(cb) {
+				dynamo.createVersion(_.extend(self.versionDefaults, {appId: appId, versionNum: 1}), cb);
+			},
+			function(cb) {
+				dynamo.nextVersionNum(appId, function(err, versionNum) {
+					assert.equal(2, versionNum);
 					cb();
 				});
 			}
