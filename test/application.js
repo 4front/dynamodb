@@ -2,14 +2,10 @@ var _ = require('lodash');
 var async = require('async');
 var shortid = require('shortid');
 var assert = require('assert');
-var DynamoDb = require('../lib/dynamo');
+var helper = require('./helper');
 
 describe('Application', function() {
-	var self;
-	var dynamo = new DynamoDb({
-	  region: 'us-west-2',
-	  endpoint: 'http://localhost:8000'
-	});
+	var dynamo = helper.newLocalDynamo();
 
 	beforeEach(function() {
 		self = this;
@@ -112,7 +108,8 @@ describe('Application', function() {
 	});
 
 	it('update application', function(done) {
-		var appData = _.extend(this.appData, {
+		var appData = _.extend({}, this.appData, {
+			appId: shortid.generate(),
 			domains: ['www.' + shortid.generate() + '.com', 'www.' + shortid.generate() + '.com']
 		});
 
