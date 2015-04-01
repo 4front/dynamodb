@@ -1,30 +1,35 @@
-var assert = require('assert');
+var _ = require('lodash');
 var async = require('async');
 var shortid = require('shortid');
-var _ = require('lodash');
-var helper = require('./helper');
+var assert = require('assert');
+var DynamoDb = require('../lib/dynamo');
 
 describe('Organization', function() {
-  var dynamo = helper.newLocalDynamo();
+	var self;
+	var dynamo = new DynamoDb({
+	  region: 'us-west-2',
+	  endpoint: 'http://localhost:8000'
+	});
 
-  beforeEach(function() {
-    this.orgDefaults = {
-      orgId: shortid.generate(),
-      name: 'test org',
-      ownerId: shortid.generate()
+	beforeEach(function() {
+		self = this;
+		this.orgData = {
+			orgId: shortid.generate(),
+			ownerId: shortid.generate(),
+			name: 'org-name'
     };
-  });
+	});
 
   it('create and update organization', function(done) {
     var self = this;
     async.waterfall([
       function(cb) {
-        dynamo.createOrganization(self.orgDefaults, cb);
+        dynamo.createOrganization(self.orgData, cb);
       },
       function(newOrg, cb) {
         dynamo.getOrganization(newOrg.orgId, function(err, org) {
           if (err) return cb(err);
-          assert.ok(_.isEqual(_.pick(org, _.keys(self.orgDefaults)), self.orgDefaults));
+          assert.ok(_.isEqual(_.pick(org, _.keys(self.orgData)), self.orgData));
           cb(null, org);
         });
       },
@@ -39,6 +44,76 @@ describe('Organization', function() {
         });
       }
     ], done);
+	});
+
+  it('create and list org members', function(done) {
+    var userIds = _.times(3, function() { return shortid.generate(); });
+
+    async.series([
+      function(cb) {
+        dynamo.createOrganization(self.orgData, cb);
+      },
+      function(cb) {
+        // Add org members
+        async.each(userIds, function(userId, cb1) {
+          dynamo.createOrgMember({
+            orgId: self.orgData.orgId,
+            userId: userId,
+            role: 'admin'
+          }, cb1);
+        }, cb);
+      },
+      function(cb) {
+        dynamo.listOrgMembers(self.orgData.orgId, function(err, members) {
+          if (err) return cb(err);
+          assert.equal(3, members.length);
+          assert.equal(0, _.difference(_.map(members, 'userId'), userIds).length);
+          cb();
+        });
+      }
+    ], done);
+  });
+
+  it('update org member', function(done) {
+    var userId = shortid.generate();
+    async.series([
+      function(cb) {
+        dynamo.createOrganization(self.orgData, cb);
+      },
+      function(cb) {
+        // Add org members
+        dynamo.createOrgMember({
+          userId: userId,
+          orgId: self.orgData.orgId,
+          role: 'contributor'
+        }, cb);
+      },
+      function(cb) {
+        dynamo.updateOrgMember({
+          userId: userId,
+          orgId: self.orgData.orgId,
+          role: 'admin'
+        }, cb);
+      },
+      function(cb) {
+        dynamo.getOrgMember(self.orgData.orgId, userId, function(err, member) {
+          if (err) return cb(err);
+
+          assert.equal('admin', member.role);
+          cb();
+        });
+      },
+      function(cb) {
+        dynamo.deleteOrgMember(self.orgData.orgId, userId, cb);
+      },
+      function(cb) {
+        dynamo.getOrgMember(self.orgData.orgId, userId, function(err, member) {
+          if (err) return cb(err);
+          assert.ok(member == null);
+          cb();
+        });
+      }
+    ], done);
   });
 
   it('org members', function(done) {
@@ -49,31 +124,31 @@ describe('Organization', function() {
 
     async.series([
       function(cb) {
-        dynamo.createOrganization(self.orgDefaults, cb);
+        dynamo.createOrganization(self.orgData, cb);
       },
       function(cb) {
-        dynamo.createOrgMember({orgId: self.orgDefaults.orgId, userId: userIds[0], role: 'admin'}, cb);
+        dynamo.createOrgMember({orgId: self.orgData.orgId, userId: userIds[0], role: 'admin'}, cb);
       },
       function(cb) {
-        dynamo.createOrgMember({orgId: self.orgDefaults.orgId, userId: userIds[1], role: 'contributor'}, cb);
+        dynamo.createOrgMember({orgId: self.orgData.orgId, userId: userIds[1], role: 'contributor'}, cb);
       },
       function(cb) {
-        dynamo.listOrgMembers(self.orgDefaults.orgId, function(err, members) {
+        dynamo.listOrgMembers(self.orgData.orgId, function(err, members) {
           assert.equal(2, members.length);
           cb();
         });
       },
       function(cb) {
-        dynamo.getOrgMember(self.orgDefaults.orgId, userIds[0], function(err, orgMember) {
+        dynamo.getOrgMember(self.orgData.orgId, userIds[0], function(err, orgMember) {
           assert.equal(orgMember.role, 'admin');
           cb();
         })
       },
       function(cb) {
-        dynamo.deleteOrgMember(self.orgDefaults.orgId, userIds[1], cb);
+        dynamo.deleteOrgMember(self.orgData.orgId, userIds[1], cb);
       },
       function(cb) {
-        dynamo.getOrgMember(self.orgDefaults.orgId, userIds[1], function(err, member) {
+        dynamo.getOrgMember(self.orgData.orgId, userIds[1], function(err, member) {
           assert.ok(_.isNull(member));
           cb();
         })
