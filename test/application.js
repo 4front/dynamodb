@@ -14,14 +14,14 @@ describe('Application', function() {
 			orgId: shortid.generate(),
 			ownerId: shortid.generate(),
 			name: 'app-name-' + shortid.generate(),
-			deployedVersions: {
-				prod: {
-					'v1': .5,
-					'v2': .5
-				},
-				test: {
-					'v3': 1
-				}
+			trafficRules: {
+				prod: [
+					{version:'v1', rule:'random:0.5'},
+					{version:'v2', rule:'random:0.5'}
+				],
+				test: [
+					{version:'v3', rule:'*'}
+				]
 			}
 		};
 	});
@@ -36,7 +36,7 @@ describe('Application', function() {
 				dynamo.createApplication(appData, function(err, app) {
 					if (err) return cb(err);
 
-					assert.ok(_.isEqual(appData, _.pick(app, _.keys(appData))));
+					assert.deepEqual(appData, _.pick(app, _.keys(appData)));
 					cb();
 				});
 			},
@@ -44,7 +44,7 @@ describe('Application', function() {
 				dynamo.getApplication(appData.appId, function(err, app) {
 					if (err) return cb(err);
 
-					assert.ok(_.isEqual(appData, _.pick(app, _.keys(appData))));
+					assert.deepEqual(appData, _.pick(app, _.keys(appData)));
 					cb();
 				});
 			}
@@ -177,6 +177,49 @@ describe('Application', function() {
 				dynamo.orgApplications(self.appData.orgId, function(err, orgAppIds) {
 					assert.equal(orgAppIds.length, 3);
 					assert.equal(_.difference(appIds, orgAppIds).length, 0);
+					cb();
+				});
+			}
+		], done);
+	});
+
+	it('updates traffic rules', function(done) {
+		var appData = {
+			appId: shortid.generate(),
+			orgId: shortid.generate(),
+			ownerId: shortid.generate(),
+			name: 'app-name-' + shortid.generate(),
+			trafficRules: {
+				production: [
+					{version: 'v1', rule:'random:0.5'},
+					{version: 'v3', rule:'random:0.5'}
+				],
+				test: [
+					{version: 'v3', rule:'*'}
+				]
+			}
+		};
+
+		var updatedRules = [
+			{version: 'v1', rule:'random:0.5'},
+			{version: 'v10', rule:'random:0.5'}
+		];
+
+		async.series([
+			function(cb) {
+				dynamo.createApplication(appData, cb);
+			},
+			function(cb) {
+				// split traffic 50/50 with v10
+				dynamo.updateTrafficRules(appData.appId, 'production', updatedRules, cb);
+			},
+			function(cb) {
+				dynamo.getApplication(appData.appId, function(err, app) {
+					if (err) return cb(err);
+
+					// verify that the test environment remained unchanged.
+					assert.deepEqual(app.trafficRules.test, [{version:'v3', rule:'*'}]);
+					assert.deepEqual(app.trafficRules.production, updatedRules);
 					cb();
 				});
 			}
