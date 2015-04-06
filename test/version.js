@@ -66,69 +66,6 @@ describe('Version', function() {
 		});
 	});
 
-	it('find all versions in an environment', function(done) {
-		var self = this;
-
-		// Create 3 versions, two of which are deployed to "prod" environment
-		var versionData = _.map(['prod', 'test', 'prod'], function(env, i) {
-			return _.extend({}, self.versionDefaults, {
-				versionId: shortid.generate(),
-				versionNum: i + 1,
-				environments: [env]
-			});
-		});
-
-		async.each(versionData, function(data, cb) {
-			dynamo.createVersion(data, cb);
-		}, function(err) {
-			if (err) return done(err);
-
-			dynamo.listVersions({appId: self.versionDefaults.appId, env: 'prod'}, function(err, versions) {
-				if (err) return done(err);
-
-				assert.equal(2, versions.length);
-				done();
-			});
-		});
-	});
-
-	it('updates deployed versions', function(done) {
-		var appData = {
-			appId: shortid.generate(),
-			orgId: shortid.generate(),
-			ownerId: shortid.generate(),
-			name: 'app-name-' + shortid.generate(),
-			deployedVersions: {
-				prod: {
-					'v1': 1,
-				},
-				test: {
-					'v3': 1
-				}
-			}
-		};
-
-		async.series([
-			function(cb) {
-				dynamo.createApplication(appData, cb);
-			},
-			function(cb) {
-				// split traffic 50/50 with v10
-				dynamo.updateDeployedVersions(appData.appId, 'prod', {'v1': .5, 'v10': .5}, cb);
-			},
-			function(cb) {
-				dynamo.getApplication(appData.appId, function(err, app) {
-					if (err) return cb(err);
-
-					// verify that the test environment remained unchanged.
-					assert.deepEqual(app.deployedVersions.test, {'v3': 1});
-					assert.deepEqual(app.deployedVersions.prod, {'v1': .5, 'v10': .5});
-					cb();
-				});
-			}
-		], done);
-	});
-
 	it('gets next version num', function(done) {
 		var self = this;
 		var appId = shortid.generate();

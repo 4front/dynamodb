@@ -117,7 +117,7 @@ describe('User', function() {
       dynamo.listUserOrgs(self.userDefaults.userId, function(err, orgs) {
         // Should get back two orgs since the terminated one is filtered out
         assert.equal(2, orgs.length);
-        assert.noDifferences(orgIds, _.map(orgs, 'orgId'));
+        assert.noDifferences([orgIds[0], orgIds[2]], _.map(orgs, 'orgId'));
         done();
       });
     });
