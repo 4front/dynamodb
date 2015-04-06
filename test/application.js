@@ -4,6 +4,8 @@ var shortid = require('shortid');
 var assert = require('assert');
 var helper = require('./helper');
 
+require('dash-assert');
+
 describe('Application', function() {
 	var dynamo = helper.newLocalDynamo();
 
@@ -132,7 +134,7 @@ describe('Application', function() {
 					if (err) return cb(err);
 
 					assert.equal(app.name, updatedData.name);
-					assert.equal(_.difference(app.domains, updatedData.domains).length, 0);
+					assert.noDifferences(app.domains, updatedData.domains);
 					cb();
 				});
 			}

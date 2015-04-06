@@ -122,8 +122,8 @@ describe('Version', function() {
 					if (err) return cb(err);
 
 					// verify that the test environment remained unchanged.
-					assert.ok(_.isEqual(app.deployedVersions.test, {'v3': 1}));
-					assert.ok(_.isEqual(app.deployedVersions.prod, {'v1': .5, 'v10': .5}));
+					assert.deepEqual(app.deployedVersions.test, {'v3': 1});
+					assert.deepEqual(app.deployedVersions.prod, {'v1': .5, 'v10': .5});
 					cb();
 				});
 			}
