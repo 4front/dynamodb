@@ -80,7 +80,7 @@ describe('User', function() {
       var userIds = _.map(users, 'userId');
       dynamo.getUserInfo(userIds, function(err, retrievedUsers) {
         assert.equal(3, _.keys(retrievedUsers).length);
-        assert.equal(_.difference(_.keys(retrievedUsers), userIds).length, 0);
+        assert.noDifferences(_.keys(retrievedUsers), userIds);
         done();
       });
     });
@@ -117,7 +117,7 @@ describe('User', function() {
       dynamo.listUserOrgs(self.userDefaults.userId, function(err, orgs) {
         // Should get back two orgs since the terminated one is filtered out
         assert.equal(2, orgs.length);
-        assert.equal(_.difference(_.map(orgs, 'orgId'), orgIds).length, 0);
+        assert.noDifferences([orgIds[0], orgIds[2]], _.map(orgs, 'orgId'));
         done();
       });
     });

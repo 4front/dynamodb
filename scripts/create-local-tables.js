@@ -33,8 +33,10 @@ async.each(_.keys(modelDefinitions), function(type, cb) {
           console.log("Table " + defn.tableName + " already exists");
           return cb(null);
         }
-        else
+        else {
+          console.log("ERROR");
           return cb(err);
+        }
       }
       cb();
     });

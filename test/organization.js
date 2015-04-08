@@ -2,14 +2,15 @@ var _ = require('lodash');
 var async = require('async');
 var shortid = require('shortid');
 var assert = require('assert');
+var moment = require('moment');
 var DynamoDb = require('../lib/dynamo');
+var helper = require('./helper');
+
+require('dash-assert');
 
 describe('Organization', function() {
 	var self;
-	var dynamo = new DynamoDb({
-	  region: 'us-west-2',
-	  endpoint: 'http://localhost:8000'
-	});
+	var dynamo = helper.newLocalDynamo();
 
 	beforeEach(function() {
 		self = this;
@@ -66,8 +67,9 @@ describe('Organization', function() {
       function(cb) {
         dynamo.listOrgMembers(self.orgData.orgId, function(err, members) {
           if (err) return cb(err);
+
           assert.equal(3, members.length);
-          assert.equal(0, _.difference(_.map(members, 'userId'), userIds).length);
+          assert.noDifferences(userIds, _.map(members, 'userId'));
           cb();
         });
       }
@@ -149,10 +151,43 @@ describe('Organization', function() {
       },
       function(cb) {
         dynamo.getOrgMember(self.orgData.orgId, userIds[1], function(err, member) {
-          assert.ok(_.isNull(member));
+          assert.isNull(member);
           cb();
         })
       }
     ], done);
   });
+
+	it('increment daily operations', function(done) {
+		var orgId = shortid.generate();
+		var appId = shortid.generate();
+		var operation = 'html-page';
+		var date = moment().format('YYYY-MM-DD');
+
+		async.series([
+			function(cb) {
+				dynamo.incrementDailyOperations(orgId, appId, operation, cb);
+			},
+			function(cb) {
+				dynamo.getDailyOperationsByOrg(orgId, date, date, function(err, data) {
+					if (err) return cb(err);
+					assert.equal(1, data[0].operationCounts[operation]);
+					assert.equal(1, data[0].total);
+					cb();
+				});
+			},
+			function(cb) {
+				dynamo.incrementDailyOperations(orgId, appId, operation, cb);
+			},
+			function(cb) {
+				dynamo.getDailyOperationsByOrg(orgId, date, date, function(err, data) {
+					if (err) return cb(err);
+
+					assert.equal(2, data[0].operationCounts[operation]);
+					assert.equal(2, data[0].total);
+					cb();
+				});
+			}
+		], done);
+	});
 });

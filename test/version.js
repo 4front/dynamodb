@@ -66,32 +66,6 @@ describe('Version', function() {
 		});
 	});
 
-	it('find all versions in an environment', function(done) {
-		var self = this;
-
-		// Create 3 versions, two of which are deployed to "prod" environment
-		var versionData = _.map(['prod', 'test', 'prod'], function(env, i) {
-			return _.extend({}, self.versionDefaults, {
-				versionId: shortid.generate(),
-				versionNum: i + 1,
-				environments: [env]
-			});
-		});
-
-		async.each(versionData, function(data, cb) {
-			dynamo.createVersion(data, cb);
-		}, function(err) {
-			if (err) return done(err);
-
-			dynamo.listVersions({appId: self.versionDefaults.appId, env: 'prod'}, function(err, versions) {
-				if (err) return done(err);
-
-				assert.equal(2, versions.length);
-				done();
-			});
-		});
-	});
-
 	it('gets next version num', function(done) {
 		var self = this;
 		var appId = shortid.generate();
