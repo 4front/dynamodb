@@ -10,7 +10,7 @@ npm install 4front-dynamo
 ## Usage
 
 ~~~js
-var dynamoDb = require('4front-dynamo')({
+var dynamoDb = require('4front-dynamodb')({
 	region: 'us-west-2',
 
 	// optional map used to

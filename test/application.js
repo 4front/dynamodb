@@ -178,7 +178,33 @@ describe('Application', function() {
 			function(cb) {
 				dynamo.orgApplications(self.appData.orgId, function(err, orgAppIds) {
 					assert.equal(orgAppIds.length, 3);
-					assert.equal(_.difference(appIds, orgAppIds).length, 0);
+					assert.noDifferences(appIds, orgAppIds);
+					cb();
+				});
+			}
+		], done);
+	});
+
+	it('list user applications', function(done) {
+		var appIds = _.times(3, function() {
+			return shortid.generate();
+		});
+		var userId = shortid.generate();
+
+		async.series([
+			function(cb) {
+				async.each(appIds, function(appId, cb1) {
+					dynamo.createApplication(_.extend({}, self.appData, {
+						appId: appId,
+						name: 'app-' + appId,
+						ownerId: userId
+					}), cb1);
+				}, cb);
+			},
+			function(cb) {
+				dynamo.userApplications(userId, function(err, userAppIds) {
+					assert.equal(userAppIds.length, 3);
+					assert.noDifferences(appIds, userAppIds);
 					cb();
 				});
 			}
