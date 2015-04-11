@@ -5,10 +5,15 @@ var shortid = require('shortid');
 var assert = require('assert');
 var helper = require('./helper');
 
+require('dash-assert');
+
 describe('Version', function() {
+	var self;
 	var dynamo = helper.newLocalDynamo();
 
 	beforeEach(function() {
+		self = this;
+
 		this.versionDefaults = {
 			versionId: shortid.generate(),
 			appId: shortid.generate(),
@@ -20,8 +25,6 @@ describe('Version', function() {
 	});
 
 	it('create version', function(done) {
-		var self = this;
-
 		async.series([
 			function(cb) {
 				dynamo.createVersion(self.versionDefaults, function(err, version) {
@@ -82,6 +85,31 @@ describe('Version', function() {
 			function(cb) {
 				dynamo.nextVersionNum(appId, function(err, versionNum) {
 					assert.equal(2, versionNum);
+					cb();
+				});
+			}
+		], done);
+	});
+
+	it('updates version', function(done) {
+		var appId = shortid.generate();
+		var versionData  = _.extend(this.versionDefaults, {appId: appId, versionNum: 1});
+
+		async.series([
+			function(cb) {
+				dynamo.createVersion(versionData, cb);
+			},
+			function(cb) {
+				_.extend(versionData, {
+					name: 'new name',
+					message: 'new message'
+				});
+
+				dynamo.updateVersion(versionData, cb);
+			},
+			function(cb) {
+				dynamo.getVersion(versionData.appId, versionData.versionId, function(err, version) {
+					assert.isMatch(version, _.pick(versionData, 'name', 'message'));
 					cb();
 				});
 			}
