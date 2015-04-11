@@ -31,7 +31,7 @@ describe('Version', function() {
 				});
 			},
 			function(cb) {
-				dynamo.getVersion(self.versionDefaults.versionId, function(err, version) {
+				dynamo.getVersion(self.versionDefaults.appId, self.versionDefaults.versionId, function(err, version) {
 					if (err) return cb(err);
 
 					assert.ok(_.isEqual(_.omit(version, 'created'), self.versionDefaults));
