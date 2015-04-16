@@ -8,3 +8,6 @@ before_script:
   - sleep 2
 script: "npm run-script test-travis"
 after_script: "npm install coveralls@2.10.0 && cat ./coverage/lcov.info | coveralls"
+addons:
+  hosts:
+    - dynamodb-local
