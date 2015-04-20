@@ -1,6 +1,7 @@
 // Script to drop and recreate all of the tables in a local dynamodb for unit tests.
 // http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Tools.DynamoDBLocal.html
 
+/* istanbul ignore next */
 var _ = require('lodash'),
   util = require('util'),
   async = require('async'),
@@ -13,7 +14,7 @@ var dynamoDb = new AWS.DynamoDB({
   region: 'us-west-2',
   endpoint: 'http://localhost:8000',
   accessKeyId: '4front',
-  secretAccessKey: 'accessKeySecret'
+  secretAccessKey: '4front'
 });
 
 vogels.dynamoDriver(dynamoDb);
@@ -21,8 +22,8 @@ vogels.dynamoDriver(dynamoDb);
 async.each(_.keys(modelDefinitions), function(type, cb) {
   var defn = modelDefinitions[type];
 
-  console.log("Deleting and recreating table " + defn.tableName);
-  dynamoDb.deleteTable({TableName: defn.tableName}, function(err, data) {
+  console.log("Deleting and recreating table 4front_" + defn.tableName);
+  dynamoDb.deleteTable({TableName: '4front_' + defn.tableName}, function(err, data) {
     if (err && /ResourceNotFoundException/.test(err.toString()) === false)
       return cb(err);
 
@@ -30,7 +31,7 @@ async.each(_.keys(modelDefinitions), function(type, cb) {
     model.createTable({}, function(err) {
       if (err) {
         if (/ResourceInUseException/.test(err.toString()) === true) {
-          console.log("Table " + defn.tableName + " already exists");
+          console.log("Table 4front_" + defn.tableName + " already exists");
           return cb(null);
         }
         else {
