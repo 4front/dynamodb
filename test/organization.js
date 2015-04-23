@@ -4,13 +4,12 @@ var shortid = require('shortid');
 var assert = require('assert');
 var moment = require('moment');
 var DynamoDb = require('../lib/dynamo');
-var helper = require('./helper');
 
 require('dash-assert');
 
 describe('Organization', function() {
 	var self;
-	var dynamo = helper.newLocalDynamo();
+	var dynamo = require('./dynamo-local');
 
 	beforeEach(function() {
 		self = this;

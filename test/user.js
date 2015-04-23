@@ -2,10 +2,9 @@ var assert = require('assert');
 var async = require('async');
 var shortid = require('shortid');
 var _ = require('lodash');
-var helper = require('./helper');
 
 describe('User', function() {
-  var dynamo = helper.newLocalDynamo();
+  var dynamo = require('./dynamo-local');
 
   beforeEach(function() {
     var userId = shortid.generate();
@@ -14,8 +13,7 @@ describe('User', function() {
       providerUserId: userId,
       username: 'user-' + userId,
       provider: 'github',
-      email: userId + '@test.com',
-      secretKey: shortid.generate()
+      email: userId + '@test.com'
     }
   });
 

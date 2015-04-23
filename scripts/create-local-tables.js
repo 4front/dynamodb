@@ -27,11 +27,11 @@ async.each(_.keys(modelDefinitions), function(type, cb) {
     if (err && /ResourceNotFoundException/.test(err.toString()) === false)
       return cb(err);
 
-    var model = vogels.define(type, defn);
+    var model = vogels.define(type, _.extend(defn, {tableName: '4front_' + defn.tableName}));
     model.createTable({}, function(err) {
       if (err) {
         if (/ResourceInUseException/.test(err.toString()) === true) {
-          console.log("Table 4front_" + defn.tableName + " already exists");
+          console.log("Table 4front_" + defn.tableName + " recreated");
           return cb(null);
         }
         else {
@@ -39,6 +39,7 @@ async.each(_.keys(modelDefinitions), function(type, cb) {
           return cb(err);
         }
       }
+      console.log("Table 4front_" + defn.tableName + " created from scratch");
       cb();
     });
   });

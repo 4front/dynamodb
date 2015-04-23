@@ -2,12 +2,12 @@ var _ = require('lodash');
 var async = require('async');
 var shortid = require('shortid');
 var assert = require('assert');
-var helper = require('./helper');
 
 require('dash-assert');
 
 describe('Application', function() {
-	var dynamo = helper.newLocalDynamo();
+	var dynamo = require('./dynamo-local');
+	var self;
 
 	beforeEach(function() {
 		self = this;

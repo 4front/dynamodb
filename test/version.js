@@ -3,13 +3,13 @@ var _ = require('lodash');
 var async = require('async');
 var shortid = require('shortid');
 var assert = require('assert');
-var helper = require('./helper');
+var debug = require('debug')('4front:dynamo:version:test')
 
 require('dash-assert');
 
 describe('Version', function() {
 	var self;
-	var dynamo = helper.newLocalDynamo();
+	var dynamo = require('./dynamo-local');
 
 	beforeEach(function() {
 		self = this;
@@ -28,6 +28,7 @@ describe('Version', function() {
 		async.series([
 			function(cb) {
 				dynamo.createVersion(self.versionDefaults, function(err, version) {
+					if (err) debug("error creating version");
 					if (err) return cb(err);
 					assert.equal(version.versionId, self.versionDefaults.versionId);
 					cb();
@@ -35,6 +36,7 @@ describe('Version', function() {
 			},
 			function(cb) {
 				dynamo.getVersion(self.versionDefaults.appId, self.versionDefaults.versionId, function(err, version) {
+					if (err) debug("error getting version");
 					if (err) return cb(err);
 
 					assert.ok(_.isEqual(_.omit(version, 'created'), self.versionDefaults));
