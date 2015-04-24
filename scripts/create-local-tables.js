@@ -27,7 +27,7 @@ async.each(_.keys(modelDefinitions), function(type, cb) {
     if (err && /ResourceNotFoundException/.test(err.toString()) === false)
       return cb(err);
 
-    var model = vogels.define(type, _.extend(defn, {tableName: '4front_' + defn.tableName}));
+    var model = vogels.define(type, _.extend({}, defn, {tableName: '4front_' + defn.tableName}));
     model.createTable({}, function(err) {
       if (err) {
         if (/ResourceInUseException/.test(err.toString()) === true) {

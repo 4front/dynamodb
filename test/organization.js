@@ -46,6 +46,26 @@ describe('Organization', function() {
     ], done);
 	});
 
+	it('list appIds', function(done) {
+		var orgId = shortid.generate();
+		var userId = shortid.generate();
+		var appIds = _.times(3, function() { return shortid.generate()});
+
+		async.series([
+			function(cb) {
+				async.each(appIds, function(appId, cb1) {
+					dynamo.models.Application.create({appId: appId, orgId: orgId, ownerId: userId}, cb1);
+				}, cb);
+			},
+			function(cb) {
+				dynamo.listOrgAppIds(orgId, function(err, ids) {
+					assert.noDifferences(ids, appIds);
+					cb();
+				});
+			}
+		], done);
+	});
+
   it('create and list org members', function(done) {
     var userIds = _.times(3, function() { return shortid.generate(); });
 
