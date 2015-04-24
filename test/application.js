@@ -53,6 +53,24 @@ describe('Application', function() {
 		], done);
 	});
 
+	it('get application by name', function(done) {
+		var self = this;
+		
+		async.series([
+			function(cb) {
+				dynamo.createApplication(self.appData, cb);
+			},
+			function(cb) {
+				dynamo.getApplicationByName(self.appData.name, function(err, app) {
+					if (err) return cb(err);
+
+					assert.isMatch(app, self.appData);
+					cb();
+				});
+			}
+		], done);
+	});
+
 	it('does not allow duplicate domains', function(done) {
 		var self = this;
 		var domain = "www." + shortid.generate() + ".com";
