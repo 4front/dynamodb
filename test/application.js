@@ -87,6 +87,21 @@ describe('Application', function() {
 		], done);
 	});
 
+	it('get appName', function(done) {
+		var appName = {name: shortid.generate(), appId: shortid.generate()};
+		async.series([
+			function(cb) {
+				dynamo.models.AppName.create(appName, cb);
+			},
+			function(cb) {
+				dynamo.getAppName(appName.name, function(err, name) {
+					assert.deepEqual(name, appName);
+					cb();
+				});
+			}
+		], done);
+	});
+
 	it('deletes application', function(done) {
 		var appData = _.extend(this.appData, {
 			domains: ['www.' + shortid.generate() + '.com']
@@ -157,30 +172,6 @@ describe('Application', function() {
 					assert.equal(app.orgId, newOrgId);
 					cb();
 				})
-			}
-		], done);
-	});
-
-	it('list org applications', function(done) {
-		var appIds = _.times(3, function() {
-			return shortid.generate();
-		});
-
-		async.series([
-			function(cb) {
-				async.each(appIds, function(appId, cb1) {
-					dynamo.createApplication(_.extend({}, self.appData, {
-						appId: appId,
-						name: 'app-' + appId
-					}), cb1);
-				}, cb);
-			},
-			function(cb) {
-				dynamo.orgApplications(self.appData.orgId, function(err, orgAppIds) {
-					assert.equal(orgAppIds.length, 3);
-					assert.noDifferences(appIds, orgAppIds);
-					cb();
-				});
 			}
 		], done);
 	});
