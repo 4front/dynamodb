@@ -55,7 +55,7 @@ describe('Application', function() {
 
 	it('get application by name', function(done) {
 		var self = this;
-		
+
 		async.series([
 			function(cb) {
 				dynamo.createApplication(self.appData, cb);
@@ -65,6 +65,26 @@ describe('Application', function() {
 					if (err) return cb(err);
 
 					assert.isMatch(app, self.appData);
+					cb();
+				});
+			}
+		], done);
+	});
+
+	it('get domain', function(done) {
+		var domain = shortid.generate() + '.com';
+		var appId = shortid.generate();
+
+		async.series([
+			function(cb){
+				dynamo.models.Domain.create({domain: domain, appId: appId}, cb);
+			},
+			function(cb) {
+				dynamo.getDomain(domain, function(err, data) {
+					if (err) return done(err);
+
+					assert.equal(data.domain, domain);
+					assert.equal(data.appId, appId);
 					cb();
 				});
 			}
