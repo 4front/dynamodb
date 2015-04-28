@@ -39,7 +39,7 @@ describe('Version', function() {
 					if (err) debug("error getting version");
 					if (err) return cb(err);
 
-					assert.ok(_.isEqual(_.omit(version, 'created'), self.versionDefaults));
+					assert.isMatch(version, self.versionDefaults);
 					cb();
 				});
 			}
@@ -53,7 +53,8 @@ describe('Version', function() {
 		var versionData = _.times(3, function(i) {
 			return _.extend({}, self.versionDefaults, {
 				versionId: shortid.generate(),
-				versionNum: i + 1
+				versionNum: i + 1,
+				active: true
 			});
 		});
 
