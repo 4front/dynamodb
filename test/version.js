@@ -54,7 +54,7 @@ describe('Version', function() {
 			return _.extend({}, self.versionDefaults, {
 				versionId: shortid.generate(),
 				versionNum: i + 1,
-				active: true
+				complete: true
 			});
 		});
 

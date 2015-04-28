@@ -28,7 +28,7 @@
     "lodash": "^3.6.0",
     "moment": "^2.9.0",
     "simple-errors": "^1.0.1",
-    "vogels": "^2.0.0-rc8"
+    "vogels": "^2.0.0-rc9"
   },
   "devDependencies": {
     "dash-assert": "^1.0.1",
