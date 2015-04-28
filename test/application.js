@@ -247,10 +247,6 @@ describe('Application', function() {
 			ownerId: shortid.generate(),
 			name: 'app-name-' + shortid.generate(),
 			trafficRules: {
-				production: [
-					{version: 'v1', rule:'random:0.5'},
-					{version: 'v3', rule:'random:0.5'}
-				],
 				test: [
 					{version: 'v3', rule:'*'}
 				]
