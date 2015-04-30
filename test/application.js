@@ -278,4 +278,150 @@ describe('Application', function() {
 			}
 		], done);
 	});
+
+	describe('env', function() {
+		beforeEach(function() {
+			this.appData = {
+				appId: shortid.generate(),
+				name: 'app-' + shortid.generate(),
+				orgId: shortid.generate(),
+				ownerId: shortid.generate(),
+				env: {}
+			};
+
+			this.envName = 'production';
+		});
+
+		it('sets new variable for non-existent environment', function(done) {
+			var self = this;
+			var key = 'DB_CONNECTION';
+			var value = 'connection_string';
+
+			async.series([
+				function(cb) {
+					dynamo.createApplication(self.appData, cb);
+				},
+				function(cb) {
+					var options = {
+						appId: self.appData.appId,
+						virtualEnv: self.envName,
+						key: key,
+						value: value
+					};
+
+					dynamo.setEnvironmentVariable(options, cb);
+				},
+				function(cb) {
+					dynamo.getApplication(self.appData.appId, function(err, app) {
+						if (err) return cb(err);
+
+						assert.equal(app.env[self.envName][key], value);
+						cb();
+					});
+				}
+			], done);
+		});
+
+		it('new variable for existing environment', function(done) {
+			var self = this;
+			var key = 'KEY', value='value';
+
+			this.appData.env[this.envName] = {};
+
+			async.series([
+				function(cb) {
+					dynamo.createApplication(self.appData, cb);
+				},
+				function(cb) {
+					var options = {
+						appId: self.appData.appId,
+						virtualEnv: self.envName,
+						key: key,
+						value: value
+					};
+
+					dynamo.setEnvironmentVariable(options, cb);
+				},
+				function(cb) {
+					dynamo.getApplication(self.appData.appId, function(err, app) {
+						if (err) return cb(err);
+
+						assert.equal(app.env[self.envName][key], value);
+						cb();
+					});
+				}
+			], done);
+		});
+
+		it('update existing env variable', function(done) {
+			var self = this;
+			var key = 'KEY', value='value';
+
+			this.appData.env[this.envName] = {key: 'old_value'};
+
+			async.series([
+				function(cb) {
+					dynamo.createApplication(self.appData, cb);
+				},
+				function(cb) {
+					var options = {
+						appId: self.appData.appId,
+						virtualEnv: self.envName,
+						key: key,
+						value: value
+					};
+
+					dynamo.setEnvironmentVariable(options, cb);
+				},
+				function(cb) {
+					dynamo.getApplication(self.appData.appId, function(err, app) {
+						if (err) return cb(err);
+
+						assert.equal(app.env[self.envName][key], value);
+						cb();
+					});
+				}
+			], done);
+		});
+
+		it('encrypted env variable', function(done) {
+			var self = this;
+
+			var key = 'KEY';
+			var value = 'sensitive_value';
+
+			async.series([
+				function(cb) {
+					dynamo.createApplication(self.appData, cb);
+				},
+				function(cb) {
+					var options = {
+						appId: self.appData.appId,
+						virtualEnv: self.envName,
+						key: key,
+						value: value,
+						encrypt: true
+					};
+
+					dynamo.setEnvironmentVariable(options, cb);
+				},
+				function(cb) {
+					dynamo.models.Application.get(self.appData.appId, function(err, app) {
+						if (err) return cb(err);
+
+						assert.ok(/^__ENCRYPTED__/.test(app.attrs.env[self.envName][key]));
+						cb();
+					})
+				},
+				function(cb) {
+					dynamo.getApplication(self.appData.appId, function(err, app) {
+						if (err) return cb(err);
+
+						assert.equal(app.env[self.envName][key], value);
+						cb();
+					});
+				}
+			], done);
+		});
+	});
 });

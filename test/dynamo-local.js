@@ -5,5 +5,6 @@ module.exports = new DynamoDb({
   endpoint: 'http://localhost:8000',
   accessKeyId: '4front',
   secretAccessKey: '4front',
-  tablePrefix: '4front_'
+  tablePrefix: '4front_',
+  cryptoPassword: '3245346345ijdsfgoiashdg'
 });
