@@ -315,7 +315,7 @@ describe('Application', function() {
 					dynamo.getApplication(self.appData.appId, function(err, app) {
 						if (err) return cb(err);
 
-						assert.equal(app.env[self.envName][key], value);
+						assert.equal(app.env[self.envName][key].value, value);
 						cb();
 					});
 				}
@@ -346,7 +346,7 @@ describe('Application', function() {
 					dynamo.getApplication(self.appData.appId, function(err, app) {
 						if (err) return cb(err);
 
-						assert.equal(app.env[self.envName][key], value);
+						assert.equal(app.env[self.envName][key].value, value);
 						cb();
 					});
 				}
@@ -377,7 +377,7 @@ describe('Application', function() {
 					dynamo.getApplication(self.appData.appId, function(err, app) {
 						if (err) return cb(err);
 
-						assert.equal(app.env[self.envName][key], value);
+						assert.equal(app.env[self.envName][key].value, value);
 						cb();
 					});
 				}
@@ -406,18 +406,12 @@ describe('Application', function() {
 					dynamo.setEnvironmentVariable(options, cb);
 				},
 				function(cb) {
-					dynamo.models.Application.get(self.appData.appId, function(err, app) {
-						if (err) return cb(err);
-
-						assert.ok(/^__ENCRYPTED__/.test(app.attrs.env[self.envName][key]));
-						cb();
-					})
-				},
-				function(cb) {
 					dynamo.getApplication(self.appData.appId, function(err, app) {
 						if (err) return cb(err);
 
-						assert.equal(app.env[self.envName][key], value);
+						var envVarValue = app.env[self.envName][key];
+						assert.isTrue(envVarValue.encrypted);
+						assert.equal(envVarValue.value, value);
 						cb();
 					});
 				}
