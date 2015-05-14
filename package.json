@@ -1,6 +1,6 @@
 {
   "name": "4front-dynamodb",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "DynamoDB metadata repository for 4front",
   "main": "index.js",
   "scripts": {
