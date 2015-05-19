@@ -63,7 +63,7 @@ describe('Version', function() {
 		}, function(err) {
 			if (err) return done(err);
 
-			dynamo.listVersions({appId: self.versionDefaults.appId, limit: 20}, function(err, versions) {
+			dynamo.listVersions(self.versionDefaults.appId, {limit: 20}, function(err, versions) {
 				if (err) return done(err);
 
 				assert.equal(3, versions.length);
