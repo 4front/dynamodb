@@ -173,7 +173,18 @@ describe('Organization', function() {
           assert.isNull(member);
           cb();
         })
-      }
+      },
+			function(cb) {
+				dynamo.deleteOrgMembers(self.orgData.orgId, cb);
+			},
+			function(cb) {
+				dynamo.listOrgMembers(self.orgData.orgId, function(err, members) {
+					if (err) return cb(err);
+
+					assert.equal(members.length, 0);
+					cb();
+				});
+			}
     ], done);
   });
 
