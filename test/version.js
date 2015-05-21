@@ -20,7 +20,8 @@ describe('Version', function() {
 			userId: shortid.generate(),
 			versionNum: 1,
 			name: 'v1',
-			message: 'deployment message'
+			message: 'deployment message',
+			manifest: {}
 		};
 	});
 
