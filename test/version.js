@@ -20,6 +20,7 @@ describe('Version', function() {
 			userId: shortid.generate(),
 			versionNum: 1,
 			name: 'v1',
+			status: 'initiated',
 			message: 'deployment message',
 			manifest: {}
 		};
@@ -55,7 +56,7 @@ describe('Version', function() {
 			return _.extend({}, self.versionDefaults, {
 				versionId: shortid.generate(),
 				versionNum: i + 1,
-				complete: true
+				status: 'complete'
 			});
 		});
 
