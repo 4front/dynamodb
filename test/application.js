@@ -150,6 +150,17 @@ describe('Application', function() {
 				dynamo.createApplication(appData, cb);
 			},
 			function(cb) {
+				// Create a version
+				dynamo.createVersion({
+					appId: appData.appId,
+					versionId: shortid.generate(),
+					name: 'v1',
+					userId: self.appData.ownerId,
+					status: 'complete',
+					manifest: {}
+				}, cb);
+			},
+			function(cb) {
 				dynamo.deleteApplication(appData.appId, cb);
 			},
 			function(cb) {
