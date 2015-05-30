@@ -71,9 +71,10 @@ describe('Application', function() {
 		], done);
 	});
 
-	it('get domain', function(done) {
+	it('get and update domain', function(done) {
 		var domain = shortid.generate() + '.com';
 		var appId = shortid.generate();
+		var zone = '123';
 
 		async.series([
 			function(cb){
@@ -85,6 +86,17 @@ describe('Application', function() {
 
 					assert.equal(data.domain, domain);
 					assert.equal(data.appId, appId);
+					cb();
+				});
+			},
+			function(cb) {
+				dynamo.updateDomainZone(domain, zone, cb);
+			},
+			function(cb) {
+				dynamo.getDomain(domain, function(err, domain) {
+					if (err) return cb(err);
+
+					assert.equal(domain.zone, zone);
 					cb();
 				});
 			}
