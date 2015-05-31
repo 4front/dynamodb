@@ -28,7 +28,7 @@ describe('Domain', function() {
 				});
 			},
 			function(cb) {
-				dynamo.updateDomain(domain, appId, zone, cb);
+				dynamo.updateDomain(appId, domain, zone, cb);
 			},
 			function(cb) {
 				dynamo.getDomain(domain, function(err, domain) {
