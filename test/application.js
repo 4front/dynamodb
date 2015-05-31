@@ -187,14 +187,12 @@ describe('Application', function() {
 
 	it('update application', function(done) {
 		var appData = _.extend({}, this.appData, {
-			appId: shortid.generate(),
-			domains: ['www.' + shortid.generate() + '.com', 'www.' + shortid.generate() + '.com']
+			appId: shortid.generate()
 		});
 
 		// Update the name and domains
 		var updatedData = _.extend({}, appData, {
 			name: shortid.generate() + '-new-name',
-			domains: [appData.domains[0], 'www.' + shortid.generate() + '.com']
 		});
 
 		// First create an application
@@ -210,9 +208,44 @@ describe('Application', function() {
 					if (err) return cb(err);
 
 					assert.equal(app.name, updatedData.name);
-					assert.noDifferences(app.domains, updatedData.domains);
 					cb();
 				});
+			}
+		], done);
+	});
+
+	it('update domains', function(done) {
+		var originalDomains = _.times(3, function() {
+			return shortid.generate() + '.domain.com';
+		});
+
+		var updatedDomains = [originalDomains[1],
+			shortid.generate() + '.domain.com',
+			shortid.generate() + '.domain.com'];
+
+		// First create an application
+		async.series([
+			function(cb) {
+				dynamo.updateDomains(self.appData.appId, originalDomains, cb);
+			},
+			function(cb) {
+				dynamo.models.Domain.query(self.appData.appId)
+					.usingIndex('appIdIndex')
+					.exec(function(err, domains) {
+						assert.noDifferences(_.map(domains.Items, _.property('attrs.domain')), originalDomains);
+						cb();
+					});
+			},
+			function(cb) {
+				dynamo.updateDomains(self.appData.appId, updatedDomains, cb);
+			},
+			function(cb) {
+				dynamo.models.Domain.query(self.appData.appId)
+					.usingIndex('appIdIndex')
+					.exec(function(err, domains) {
+						assert.noDifferences(_.map(domains.Items, _.property('attrs.domain')), updatedDomains);
+						cb();
+					});
 			}
 		], done);
 	});
