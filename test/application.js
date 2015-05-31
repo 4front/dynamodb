@@ -29,24 +29,23 @@ describe('Application', function() {
 	});
 
 	it('create and retrieve application', function(done) {
-		var appData = _.extend(this.appData, {
-			domains: ['www.' + shortid.generate() + '.com']
-		});
-
 		async.series([
 			function(cb) {
-				dynamo.createApplication(appData, function(err, app) {
+				dynamo.createApplication(self.appData, function(err, app) {
 					if (err) return cb(err);
 
-					assert.deepEqual(appData, _.pick(app, _.keys(appData)));
+					assert.isMatch(app, self.appData);
+					// assert.deepEqual(appData, _.pick(app, _.keys(self.appData)));
 					cb();
 				});
 			},
 			function(cb) {
-				dynamo.getApplication(appData.appId, function(err, app) {
+				dynamo.getApplication(self.appData.appId, function(err, app) {
 					if (err) return cb(err);
 
-					assert.deepEqual(appData, _.pick(app, _.keys(appData)));
+					assert.isMatch(app, self.appData);
+
+					// assert.deepEqual(appData, _.pick(app, _.keys(self.appData)));
 					cb();
 				});
 			}
@@ -65,56 +64,6 @@ describe('Application', function() {
 					if (err) return cb(err);
 
 					assert.isMatch(app, self.appData);
-					cb();
-				});
-			}
-		], done);
-	});
-
-	it('get and update domain', function(done) {
-		var domain = shortid.generate() + '.com';
-		var appId = shortid.generate();
-		var zone = '123';
-
-		async.series([
-			function(cb){
-				dynamo.models.Domain.create({domain: domain, appId: appId}, cb);
-			},
-			function(cb) {
-				dynamo.getDomain(domain, function(err, data) {
-					if (err) return done(err);
-
-					assert.equal(data.domain, domain);
-					assert.equal(data.appId, appId);
-					cb();
-				});
-			},
-			function(cb) {
-				dynamo.updateDomainZone(domain, zone, cb);
-			},
-			function(cb) {
-				dynamo.getDomain(domain, function(err, domain) {
-					if (err) return cb(err);
-
-					assert.equal(domain.zone, zone);
-					cb();
-				});
-			}
-		], done);
-	});
-
-	it('does not allow duplicate domains', function(done) {
-		var self = this;
-		var domain = "www." + shortid.generate() + ".com";
-		async.series([
-			function(cb) {
-				dynamo.models.Domain.create({domain:domain, appId: shortid.generate()}, cb);
-			},
-			function(cb) {
-				dynamo.createApplication(_.extend(self.appData, {domains: [domain]}), function(err, app) {
-					if (err) return cb(err);
-
-					assert.ok(!app.domains);
 					cb();
 				});
 			}
@@ -153,18 +102,14 @@ describe('Application', function() {
 	});
 
 	it('deletes application', function(done) {
-		var appData = _.extend(this.appData, {
-			domains: ['www.' + shortid.generate() + '.com']
-		});
-
 		async.series([
 			function(cb) {
-				dynamo.createApplication(appData, cb);
+				dynamo.createApplication(self.appData, cb);
 			},
 			function(cb) {
 				// Create a version
 				dynamo.createVersion({
-					appId: appData.appId,
+					appId: self.appData.appId,
 					versionId: shortid.generate(),
 					name: 'v1',
 					userId: self.appData.ownerId,
@@ -173,10 +118,13 @@ describe('Application', function() {
 				}, cb);
 			},
 			function(cb) {
-				dynamo.deleteApplication(appData.appId, cb);
+				dynamo.createDomain(self.appData.appId, shortid.generate() + '.domain.com', cb);
 			},
 			function(cb) {
-				dynamo.getApplication(appData.appId, function(err, app) {
+				dynamo.deleteApplication(self.appData.appId, cb);
+			},
+			function(cb) {
+				dynamo.getApplication(self.appData.appId, function(err, app) {
 					if (err) return cb(err);
 					assert.ok(_.isNull(app));
 					cb();
@@ -210,42 +158,6 @@ describe('Application', function() {
 					assert.equal(app.name, updatedData.name);
 					cb();
 				});
-			}
-		], done);
-	});
-
-	it('update domains', function(done) {
-		var originalDomains = _.times(3, function() {
-			return shortid.generate() + '.domain.com';
-		});
-
-		var updatedDomains = [originalDomains[1],
-			shortid.generate() + '.domain.com',
-			shortid.generate() + '.domain.com'];
-
-		// First create an application
-		async.series([
-			function(cb) {
-				dynamo.updateDomains(self.appData.appId, originalDomains, cb);
-			},
-			function(cb) {
-				dynamo.models.Domain.query(self.appData.appId)
-					.usingIndex('appIdIndex')
-					.exec(function(err, domains) {
-						assert.noDifferences(_.map(domains.Items, _.property('attrs.domain')), originalDomains);
-						cb();
-					});
-			},
-			function(cb) {
-				dynamo.updateDomains(self.appData.appId, updatedDomains, cb);
-			},
-			function(cb) {
-				dynamo.models.Domain.query(self.appData.appId)
-					.usingIndex('appIdIndex')
-					.exec(function(err, domains) {
-						assert.noDifferences(_.map(domains.Items, _.property('attrs.domain')), updatedDomains);
-						cb();
-					});
 			}
 		], done);
 	});
