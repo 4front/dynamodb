@@ -85,7 +85,11 @@ describe('Domain', function() {
         dynamo.models.Domain.query(appId)
           .usingIndex('appIdIndex')
           .exec(function(err, domains) {
-            assert.noDifferences(_.map(domains.Items, _.property('attrs.domain')), originalDomains);
+						var updatedDomains = _.map(domains.Items, function(item) {
+							return item.attrs.domain;
+						});
+
+            assert.noDifferences(updatedDomains, originalDomains);
             cb();
           });
       },
@@ -100,8 +104,13 @@ describe('Domain', function() {
         dynamo.models.Domain.query(appId)
           .usingIndex('appIdIndex')
           .exec(function(err, domains) {
-            assert.noDifferences(_.map(domains.Items, _.property('attrs.domain')),
+						var updatedDomains = _.map(domains.Items, function(item) {
+							return item.attrs.domain;
+						});
+
+            assert.noDifferences(updatedDomains,
               [originalDomains[0], originalDomains[2], newDomain]);
+
             cb();
           });
       }

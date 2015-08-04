@@ -6,5 +6,13 @@ module.exports = new DynamoDb({
   accessKeyId: '4front',
   secretAccessKey: '4front',
   tablePrefix: '4front_',
-  cryptoPassword: '3245346345ijdsfgoiashdg'
+  crypto: {
+    // Just for testing purposes obviously.
+    encrypt: function(value) {
+      return new Buffer(value).toString('base64');
+    },
+    decrypt: function(value) {
+      return new Buffer(value, 'base64').toString('utf8');
+    }
+  }
 });
