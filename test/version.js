@@ -49,33 +49,42 @@ describe('Version', function() {
 	});
 
 	it('lists versions', function(done) {
-		var self = this;
+		// Get version numbers 1 to 10 in shuffled order
+		var maxVersionNum = 10;
+		var versionNums = _.shuffle(_.range(1, maxVersionNum + 1));
 
-		// Create 3 versions, two of which are deployed to "prod" environment
-		var versionData = _.times(3, function(i) {
+		var versionData = _.map(versionNums, function(num) {
 			return _.extend({}, self.versionDefaults, {
+				name: 'v' + num,
 				versionId: shortid.generate(),
-				versionNum: i + 1,
+				versionNum: num,
 				status: 'complete'
 			});
 		});
+
+		var limit = 5;
 
 		async.each(versionData, function(data, cb) {
 			dynamo.createVersion(data, cb);
 		}, function(err) {
 			if (err) return done(err);
 
-			dynamo.listVersions(self.versionDefaults.appId, {limit: 20}, function(err, versions) {
-				if (err) return done(err);
+			dynamo.listVersions(self.versionDefaults.appId, {limit: limit}, function(_err, versions) {
+				if (_err) return done(_err);
 
-				assert.equal(3, versions.length);
+				assert.equal(limit, versions.length);
+
+				// Verify that the versions are in the right descending order
+				for (var i = 0; i < limit; i++) {
+					assert.equal(versions[i].versionNum, maxVersionNum - i);
+				}
+
 				done();
 			});
 		});
 	});
 
 	it('gets next version num', function(done) {
-		var self = this;
 		var appId = shortid.generate();
 		async.series([
 			function(cb) {
@@ -98,7 +107,7 @@ describe('Version', function() {
 
 	it('updates version', function(done) {
 		var appId = shortid.generate();
-		var versionData  = _.extend(this.versionDefaults, {appId: appId, versionNum: 1});
+		var versionData = _.extend(this.versionDefaults, {appId: appId, versionNum: 1});
 
 		async.series([
 			function(cb) {
@@ -119,5 +128,31 @@ describe('Version', function() {
 				});
 			}
 		], done);
+	});
+
+	it('returns version count', function(done) {
+		var versionNums = _.range(1, 5);
+
+		var versionData = _.map(versionNums, function(num) {
+			return _.extend({}, self.versionDefaults, {
+				name: 'v' + num,
+				versionId: shortid.generate(),
+				versionNum: num,
+				status: 'complete'
+			});
+		});
+
+		async.each(versionData, function(data, cb) {
+			dynamo.createVersion(data, cb);
+		}, function(err) {
+			if (err) return done(err);
+
+			dynamo.getVersionCount(self.versionDefaults.appId, function(_err, count) {
+				if (_err) return done(_err);
+
+				assert.equal(4, count);
+				done();
+			});
+		});
 	});
 });
