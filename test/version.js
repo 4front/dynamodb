@@ -62,23 +62,15 @@ describe('Version', function() {
 			});
 		});
 
-		var limit = 5;
-
 		async.each(versionData, function(data, cb) {
 			dynamo.createVersion(data, cb);
 		}, function(err) {
 			if (err) return done(err);
 
-			dynamo.listVersions(self.versionDefaults.appId, {limit: limit}, function(_err, versions) {
+			dynamo.listVersions(self.versionDefaults.appId, {}, function(_err, versions) {
 				if (_err) return done(_err);
 
-				assert.equal(limit, versions.length);
-
-				// Verify that the versions are in the right descending order
-				for (var i = 0; i < limit; i++) {
-					assert.equal(versions[i].versionNum, maxVersionNum - i);
-				}
-
+				assert.equal(maxVersionNum, versions.length);
 				done();
 			});
 		});
