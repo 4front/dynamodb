@@ -147,4 +147,15 @@ describe('Version', function() {
 			});
 		});
 	});
+
+	it('deletes version', function(done) {
+		async.series([
+			function(cb) {
+				dynamo.createVersion(self.versionDefaults, cb);
+			},
+			function(cb) {
+				dynamo.deleteVersion(self.versionDefaults.appId, self.versionDefaults.versionId, cb);
+			}
+		], done);
+	});
 });
