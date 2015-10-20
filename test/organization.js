@@ -3,25 +3,24 @@ var async = require('async');
 var shortid = require('shortid');
 var assert = require('assert');
 var moment = require('moment');
-var DynamoDb = require('../lib/dynamo');
 
 require('dash-assert');
 
 describe('Organization', function() {
-	var self;
-	var dynamo = require('./dynamo-local');
+  var self;
+  var dynamo = require('./dynamo-local');
 
-	beforeEach(function() {
-		self = this;
-		this.orgData = {
-			orgId: shortid.generate(),
-			ownerId: shortid.generate(),
-			name: 'org-name'
+  beforeEach(function() {
+    self = this;
+    this.orgData = {
+      orgId: shortid.generate(),
+      ownerId: shortid.generate(),
+      name: 'org-name'
     };
-	});
+  });
 
   it('create and update organization', function(done) {
-    var self = this;
+    self = this;
     async.waterfall([
       function(cb) {
         dynamo.createOrganization(self.orgData, cb);
@@ -44,27 +43,29 @@ describe('Organization', function() {
         });
       }
     ], done);
-	});
+  });
 
-	it('list appIds', function(done) {
-		var orgId = shortid.generate();
-		var userId = shortid.generate();
-		var appIds = _.times(3, function() { return shortid.generate()});
+  it('list appIds', function(done) {
+    var orgId = shortid.generate();
+    var userId = shortid.generate();
+    var appIds = _.times(3, function() {
+      return shortid.generate();
+    });
 
-		async.series([
-			function(cb) {
-				async.each(appIds, function(appId, cb1) {
-					dynamo.models.Application.create({appId: appId, orgId: orgId, ownerId: userId}, cb1);
-				}, cb);
-			},
-			function(cb) {
-				dynamo.listOrgAppIds(orgId, function(err, ids) {
-					assert.noDifferences(ids, appIds);
-					cb();
-				});
-			}
-		], done);
-	});
+    async.series([
+      function(cb) {
+        async.each(appIds, function(appId, cb1) {
+          dynamo.models.Application.create({appId: appId, orgId: orgId, ownerId: userId}, cb1);
+        }, cb);
+      },
+      function(cb) {
+        dynamo.listOrgAppIds(orgId, function(err, ids) {
+          assert.noDifferences(ids, appIds);
+          cb();
+        });
+      }
+    ], done);
+  });
 
   it('create and list org members', function(done) {
     var userIds = _.times(3, function() { return shortid.generate(); });
@@ -138,7 +139,7 @@ describe('Organization', function() {
   });
 
   it('org members', function(done) {
-    var self = this;
+    self = this;
     var userIds = _.times(2, function() {
       return shortid.generate();
     });
@@ -163,7 +164,7 @@ describe('Organization', function() {
         dynamo.getOrgMember(self.orgData.orgId, userIds[0], function(err, orgMember) {
           assert.equal(orgMember.role, 'admin');
           cb();
-        })
+        });
       },
       function(cb) {
         dynamo.deleteOrgMember(self.orgData.orgId, userIds[1], cb);
@@ -172,52 +173,52 @@ describe('Organization', function() {
         dynamo.getOrgMember(self.orgData.orgId, userIds[1], function(err, member) {
           assert.isNull(member);
           cb();
-        })
+        });
       },
-			function(cb) {
-				dynamo.deleteOrgMembers(self.orgData.orgId, cb);
-			},
-			function(cb) {
-				dynamo.listOrgMembers(self.orgData.orgId, function(err, members) {
-					if (err) return cb(err);
+      function(cb) {
+        dynamo.deleteOrgMembers(self.orgData.orgId, cb);
+      },
+      function(cb) {
+        dynamo.listOrgMembers(self.orgData.orgId, function(err, members) {
+          if (err) return cb(err);
 
-					assert.equal(members.length, 0);
-					cb();
-				});
-			}
+          assert.equal(members.length, 0);
+          cb();
+        });
+      }
     ], done);
   });
 
-	it('increment daily operations', function(done) {
-		var orgId = shortid.generate();
-		var appId = shortid.generate();
-		var operation = 'html-page';
-		var date = moment().format('YYYY-MM-DD');
+  it('increment daily operations', function(done) {
+    var orgId = shortid.generate();
+    var appId = shortid.generate();
+    var operation = 'html-page';
+    var date = moment().format('YYYY-MM-DD');
 
-		async.series([
-			function(cb) {
-				dynamo.incrementDailyOperations(orgId, appId, operation, cb);
-			},
-			function(cb) {
-				dynamo.getDailyOperationsByOrg(orgId, date, date, function(err, data) {
-					if (err) return cb(err);
-					assert.equal(1, data[0].operationCounts[operation]);
-					assert.equal(1, data[0].total);
-					cb();
-				});
-			},
-			function(cb) {
-				dynamo.incrementDailyOperations(orgId, appId, operation, cb);
-			},
-			function(cb) {
-				dynamo.getDailyOperationsByOrg(orgId, date, date, function(err, data) {
-					if (err) return cb(err);
+    async.series([
+      function(cb) {
+        dynamo.incrementDailyOperations(orgId, appId, operation, cb);
+      },
+      function(cb) {
+        dynamo.getDailyOperationsByOrg(orgId, date, date, function(err, data) {
+          if (err) return cb(err);
+          assert.equal(1, data[0].operationCounts[operation]);
+          assert.equal(1, data[0].total);
+          cb();
+        });
+      },
+      function(cb) {
+        dynamo.incrementDailyOperations(orgId, appId, operation, cb);
+      },
+      function(cb) {
+        dynamo.getDailyOperationsByOrg(orgId, date, date, function(err, data) {
+          if (err) return cb(err);
 
-					assert.equal(2, data[0].operationCounts[operation]);
-					assert.equal(2, data[0].total);
-					cb();
-				});
-			}
-		], done);
-	});
+          assert.equal(2, data[0].operationCounts[operation]);
+          assert.equal(2, data[0].total);
+          cb();
+        });
+      }
+    ], done);
+  });
 });

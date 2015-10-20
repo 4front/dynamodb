@@ -1,3 +1,4 @@
+/* eslint no-console: 0 */
 var AWS = require('aws-sdk');
 
 // Connect to DynamoDB local
@@ -9,6 +10,6 @@ var dynamoDb = new AWS.DynamoDB({
 });
 
 dynamoDb.listTables({}, function(err, data) {
-    if (err) print(err); // an error occurred
-    else console.log(data); // successful response
+  if (err) print(err); // an error occurred
+  else console.log(data); // successful response
 });

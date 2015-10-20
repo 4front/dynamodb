@@ -1,9 +1,9 @@
+/* eslint no-console: 0 */
 // Script to drop and recreate all of the tables in a local dynamodb for unit tests.
 // http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Tools.DynamoDBLocal.html
 
 /* istanbul ignore next */
 var _ = require('lodash'),
-  util = require('util'),
   async = require('async'),
   vogels = require('vogels'),
   AWS = require('aws-sdk'),
@@ -17,35 +17,42 @@ var dynamoDb = new AWS.DynamoDB({
   secretAccessKey: '4front'
 });
 
+// var dynamoDb = new AWS.DynamoDB({
+//   region: 'us-west-2'
+// });
+
 vogels.dynamoDriver(dynamoDb);
 
-async.each(_.keys(modelDefinitions), function(type, cb) {
+var models = _.keys(modelDefinitions);
+// var models = ['Domain', 'Certificate'];
+
+async.eachSeries(models, function(type, cb) {
   var defn = modelDefinitions[type];
 
-  console.log("Deleting and recreating table 4front_" + defn.tableName);
-  dynamoDb.deleteTable({TableName: '4front_' + defn.tableName}, function(err, data) {
-    if (err && /ResourceNotFoundException/.test(err.toString()) === false)
-      return cb(err);
-
-    var model = vogels.define(type, _.extend({}, defn, {tableName: '4front_' + defn.tableName}));
-    model.createTable({}, function(err) {
-      if (err) {
-        if (/ResourceInUseException/.test(err.toString()) === true) {
-          console.log("Table 4front_" + defn.tableName + " recreated");
-          return cb(null);
-        }
-        else {
-          console.log("ERROR");
-          return cb(err);
-        }
+  setTimeout(function() {
+    console.log('Deleting and recreating table 4front_' + defn.tableName);
+    dynamoDb.deleteTable({TableName: '4front_' + defn.tableName}, function(err) {
+      if (err && /ResourceNotFoundException/.test(err.toString()) === false) {
+        return cb(err);
       }
-      console.log("Table 4front_" + defn.tableName + " created from scratch");
-      cb();
-    });
-  });
-}, function(err) {
-  if (err)
-    return console.log("Error creating table: " + err);
 
-  console.log("Done creating tables");
+      var model = vogels.define(type, _.extend({}, defn, {tableName: '4front_' + defn.tableName}));
+      model.createTable({}, function(_err) {
+        if (_err) {
+          if (/ResourceInUseException/.test(_err.toString()) === true) {
+            console.log('Table 4front_' + defn.tableName + ' recreated');
+            return cb(null);
+          }
+          console.log('ERROR');
+          return cb(_err);
+        }
+        console.log('Table 4front_' + defn.tableName + ' created from scratch');
+        cb();
+      });
+    });
+  }, 5000);
+}, function(err) {
+  if (err) return console.log('Error creating table: ' + err);
+
+  console.log('Done creating tables');
 });
