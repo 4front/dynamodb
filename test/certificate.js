@@ -7,32 +7,40 @@ require('dash-assert');
 
 describe('Certificate', function() {
   var dynamo = require('./dynamo-local');
+  var self;
 
-  it('get and update certificate', function(done) {
-    var certData = {
+  beforeEach(function() {
+    self = this;
+
+    this.certData = {
       orgId: shortid.generate(),
       name: 'www.' + shortid.generate() + '.com',
+      certificateId: shortid.generate(),
       zone: 'zone1',
-      description: 'domain cert'
+      description: 'domain cert',
+      expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(), // one year
+      uploadDate: new Date().toISOString()
     };
+  });
 
+  it('get and update certificate', function(done) {
     async.series([
       function(cb) {
-        dynamo.createCertificate(certData, cb);
+        dynamo.createCertificate(self.certData, cb);
       },
       function(cb) {
-        dynamo.getCertificate(certData.name, function(err, data) {
+        dynamo.getCertificate(self.certData.name, function(err, cert) {
           if (err) return done(err);
 
-          assert.isMatch(data, certData);
+          assert.isMatch(cert, self.certData);
           cb();
         });
       },
       function(cb) {
-        dynamo.updateCertificate(_.extend(certData, {description: 'new description'}), cb);
+        dynamo.updateCertificate(_.extend({}, self.certData, {description: 'new description'}), cb);
       },
       function(cb) {
-        dynamo.getCertificate(certData.name, function(err, cert) {
+        dynamo.getCertificate(self.certData.name, function(err, cert) {
           if (err) return cb(err);
 
           assert.equal(cert.description, 'new description');
@@ -43,14 +51,8 @@ describe('Certificate', function() {
   });
 
   it('list certificates for org', function(done) {
-    var certData = {
-      orgId: shortid.generate(),
-      zone: 'zone1',
-      description: 'domain cert'
-    };
-
     var certs = _.times(3, function() {
-      return _.extend({}, certData, {
+      return _.extend({}, self.certData, {
         name: 'www.' + shortid.generate() + '.com'
       });
     });
@@ -62,7 +64,7 @@ describe('Certificate', function() {
         }, cb);
       },
       function(cb) {
-        dynamo.listCertificates(certData.orgId, function(err, data) {
+        dynamo.listCertificates(self.certData.orgId, function(err, data) {
           if (err) return cb(err);
 
           assert.equal(data.length, certs.length);
@@ -73,13 +75,6 @@ describe('Certificate', function() {
   });
 
   it('delete certificate', function(done) {
-    var certData = {
-      orgId: shortid.generate(),
-      name: 'www.' + shortid.generate() + '.com',
-      zone: 'zone1',
-      description: 'domain cert'
-    };
-
     var domains = [
       shortid.generate() + '.domain.com',
       shortid.generate() + '.domain.com'
@@ -88,7 +83,7 @@ describe('Certificate', function() {
     var cert;
     async.series([
       function(cb) {
-        dynamo.createCertificate(certData, function(err, data) {
+        dynamo.createCertificate(self.certData, function(err, data) {
           if (err) return cb(err);
           cert = data;
           cb();
