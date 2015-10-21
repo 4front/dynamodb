@@ -62,7 +62,7 @@ describe('Certificate', function() {
         }, cb);
       },
       function(cb) {
-        dynamo.listCerticates(certData.orgId, function(err, data) {
+        dynamo.listCertificates(certData.orgId, function(err, data) {
           if (err) return cb(err);
 
           assert.equal(data.length, certs.length);
@@ -113,7 +113,7 @@ describe('Certificate', function() {
         dynamo.deleteCertificate(cert.orgId, cert.name, cb);
       },
       function(cb) {
-        dynamo.listCerticates(cert.orgId, function(err, certs) {
+        dynamo.listCertificates(cert.orgId, function(err, certs) {
           if (err) return cb(err);
 
           assert.equal(0, certs.length);
