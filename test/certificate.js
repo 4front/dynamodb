@@ -21,7 +21,8 @@ describe('Certificate', function() {
       zone: 'zone1',
       description: 'domain cert',
       expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(), // one year
-      uploadDate: new Date().toISOString()
+      uploadDate: new Date().toISOString(),
+      status: 'InProgress'
     };
   });
 
