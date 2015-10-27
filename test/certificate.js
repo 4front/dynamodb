@@ -12,9 +12,11 @@ describe('Certificate', function() {
   beforeEach(function() {
     self = this;
 
+    var commonName = 'www.' + shortid.generate() + '.com';
     this.certData = {
       orgId: shortid.generate(),
-      name: 'www.' + shortid.generate() + '.com',
+      name: commonName,
+      commonName: commonName,
       certificateId: shortid.generate(),
       zone: 'zone1',
       description: 'domain cert',
