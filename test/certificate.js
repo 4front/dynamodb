@@ -19,6 +19,7 @@ describe('Certificate', function() {
       commonName: commonName,
       certificateId: shortid.generate(),
       zone: 'zone1',
+      cname: 'abc.cdn.com',
       description: 'domain cert',
       expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(), // one year
       uploadDate: new Date().toISOString(),
