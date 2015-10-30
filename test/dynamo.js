@@ -1,7 +1,6 @@
-var Joi = require('joi');
-var shortid = require('shortid');
-var assert = require('assert');
-var DynamoDb = require('../lib/dynamo');
+// var shortid = require('shortid');
+// var assert = require('assert');
+// var DynamoDb = require('../lib/dynamo');
 
 describe('dynamo', function() {
 	// it('model extensions', function(done) {
@@ -21,7 +20,7 @@ describe('dynamo', function() {
 	// 	// assert.equal('customAppName', dynamo.models.AppName.tableName());
 
 	// 	// vogels.models['Application'];
-		
+
 	// 	dynamo.models.AppName.describeTable(function(err, table) {
 	// 		debugger;
 	// 		assert.ok(err);

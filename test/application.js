@@ -29,6 +29,8 @@ describe('Application', function() {
   });
 
   it('create and retrieve application', function(done) {
+    var customDomain = 'www.' + shortid.generate() + '.com';
+
     async.series([
       function(cb) {
         dynamo.createApplication(self.appData, function(err, app) {
@@ -40,12 +42,20 @@ describe('Application', function() {
         });
       },
       function(cb) {
+        dynamo.createDomain({
+          appId: self.appData.appId,
+          orgId: self.appData.orgId,
+          domain: customDomain,
+          action: 'resolve'}, cb);
+      },
+      function(cb) {
         dynamo.getApplication(self.appData.appId, function(err, app) {
           if (err) return cb(err);
 
           assert.isMatch(app, self.appData);
+          assert.equal(app.domains.length, 1);
+          assert.equal(app.domains[0].domain, customDomain);
 
-          // assert.deepEqual(appData, _.pick(app, _.keys(self.appData)));
           cb();
         });
       }

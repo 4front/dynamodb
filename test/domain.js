@@ -22,6 +22,7 @@ describe('Domain', function() {
         dynamo.getDomain(domain, function(err, data) {
           if (err) return done(err);
 
+          assert.equal(data.action, 'resolve');
           assert.equal(data.domain, domain);
           assert.equal(data.appId, appId);
           cb();
