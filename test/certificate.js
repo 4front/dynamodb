@@ -18,7 +18,7 @@ describe('Certificate', function() {
       name: commonName,
       commonName: commonName,
       certificateId: shortid.generate(),
-      zone: 'zone1',
+      zone: shortid.generate(),
       cname: 'abc.cdn.com',
       description: 'domain cert',
       expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(), // one year
@@ -98,6 +98,7 @@ describe('Certificate', function() {
         dynamo.createDomain({
           domain: domains[0],
           certificate: cert.name,
+          zone: cert.zone,
           orgId: cert.orgId
         }, cb);
       },
@@ -105,7 +106,8 @@ describe('Certificate', function() {
         // Create another domain not bound to the cert
         dynamo.createDomain({
           domain: domains[1],
-          orgId: cert.orgId
+          orgId: cert.orgId,
+          zone: shortid.generate()
         }, cb);
       },
       function(cb) {

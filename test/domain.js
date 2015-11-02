@@ -16,7 +16,7 @@ describe('Domain', function() {
 
     async.series([
       function(cb) {
-        dynamo.models.Domain.create({domain: domain, appId: appId, orgId: orgId}, cb);
+        dynamo.models.Domain.create({domain: domain, appId: appId, orgId: orgId, zone: zone}, cb);
       },
       function(cb) {
         dynamo.getDomain(domain, function(err, data) {
@@ -47,14 +47,15 @@ describe('Domain', function() {
 
     var appId = shortid.generate();
     var orgId = shortid.generate();
+    var zoneId = shortid.generate();
 
     async.series([
       function(cb) {
-        dynamo.createDomain({appId: appId, orgId: orgId, domain: domainName}, cb);
+        dynamo.createDomain({appId: appId, orgId: orgId, domain: domainName, zone: zoneId}, cb);
       },
       function(cb) {
         // Try to create the same domain for a different app
-        dynamo.createDomain({appId: appId, orgId: orgId, domain: domainName}, function(err) {
+        dynamo.createDomain({appId: appId, orgId: orgId, domain: domainName, zone: zoneId}, function(err) {
           assert.equal(err.code, 'domainTaken');
           cb();
         });
@@ -71,6 +72,7 @@ describe('Domain', function() {
   it('update domains', function(done) {
     var appId = shortid.generate();
     var orgId = shortid.generate();
+    var zoneId = shortid.generate();
 
     var originalDomains = _.times(3, function() {
       return shortid.generate() + '.domain.com';
@@ -80,7 +82,7 @@ describe('Domain', function() {
     async.series([
       function(cb) {
         async.each(originalDomains, function(domainName, cb1) {
-          dynamo.createDomain({appId: appId, orgId: orgId, domain: domainName}, cb1);
+          dynamo.createDomain({appId: appId, orgId: orgId, domain: domainName, zone: zoneId}, cb1);
         }, cb);
       },
       function(cb) {
@@ -97,7 +99,7 @@ describe('Domain', function() {
       },
       function(cb) {
         // Add a new domain
-        dynamo.createDomain({appId: appId, domain: newDomain, orgId: orgId}, cb);
+        dynamo.createDomain({appId: appId, domain: newDomain, orgId: orgId, zone: zoneId}, cb);
       },
       function(cb) {
         dynamo.deleteDomain(orgId, originalDomains[1], cb);
@@ -121,13 +123,14 @@ describe('Domain', function() {
 
   it('try delete domain from different org', function(done) {
     var domainName = shortid.generate() + '.domain.com';
+    var zoneId = shortid.generate();
 
     async.series([
       function(cb) {
-        dynamo.createDomain({orgId: shortid.generate(), domain: domainName}, cb);
+        dynamo.createDomain({orgId: shortid.generate(), domain: domainName, zone: zoneId}, cb);
       },
       function(cb) {
-        dynamo.createDomain({orgId: shortid.generate(), domain: domainName}, function(err) {
+        dynamo.createDomain({orgId: shortid.generate(), domain: domainName, zone: zoneId}, function(err) {
           assert.equal(err.code, 'domainTaken');
           cb();
         });

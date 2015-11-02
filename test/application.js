@@ -46,6 +46,7 @@ describe('Application', function() {
           appId: self.appData.appId,
           orgId: self.appData.orgId,
           domain: customDomain,
+          zone: shortid.generate(),
           action: 'resolve'}, cb);
       },
       function(cb) {
@@ -131,6 +132,7 @@ describe('Application', function() {
         dynamo.createDomain({
           appId: self.appData.appId,
           domain: shortid.generate() + '.domain.com',
+          zone: shortid.generate(),
           orgId: self.appData.orgId
         }, cb);
       },
