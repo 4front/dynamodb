@@ -2,6 +2,7 @@ var assert = require('assert');
 var async = require('async');
 var shortid = require('shortid');
 var _ = require('lodash');
+require('dash-assert');
 
 describe('User', function() {
   var dynamo = require('./dynamo-local');
@@ -14,7 +15,7 @@ describe('User', function() {
       username: 'user-' + userId,
       provider: 'github',
       email: userId + '@test.com'
-    }
+    };
   });
 
   it('create, retrieves and updates user', function(done) {
@@ -53,18 +54,17 @@ describe('User', function() {
       function(cb) {
         dynamo.findUser(self.userDefaults.providerUserId, 'github', function(err, user) {
           if (err) return cb(err);
-          debugger;
           assert.equal(user.username, 'user-' + self.userDefaults.userId);
           cb();
         });
       }
-    ], done)
+    ], done);
   });
 
   it('getUserInfo', function(done) {
     var self = this;
 
-    var users = _.times(3, function(i) {
+    var users = _.times(3, function() {
       return _.extend({}, self.userDefaults, {
         userId: shortid.generate()
       });
@@ -76,7 +76,7 @@ describe('User', function() {
       if (err) return done(err);
 
       var userIds = _.map(users, 'userId');
-      dynamo.getUserInfo(userIds, function(err, retrievedUsers) {
+      dynamo.getUserInfo(userIds, function(_err, retrievedUsers) {
         assert.equal(3, _.keys(retrievedUsers).length);
         assert.noDifferences(_.keys(retrievedUsers), userIds);
         done();
@@ -93,26 +93,26 @@ describe('User', function() {
 
     async.each(orgIds, function(orgId, cb) {
       async.parallel([
-        function(cb1) {
+        function(_cb) {
           dynamo.createOrganization({
             orgId: orgId,
             name: 'org-' + orgId,
             ownerId: shortid.generate(),
-            terminated: orgId == orgIds[1]
-          }, cb);
+            terminated: orgId === orgIds[1]
+          }, _cb);
         },
         function(cb1) {
           dynamo.createOrgMember({
             orgId: orgId,
             userId: self.userDefaults.userId,
-            role:'contributor'
+            role: 'contributor'
           }, cb1);
         }
       ], cb);
     }, function(err) {
       if (err) return done(err);
 
-      dynamo.listUserOrgs(self.userDefaults.userId, function(err, orgs) {
+      dynamo.listUserOrgs(self.userDefaults.userId, function(_err, orgs) {
         // Should get back two orgs since the terminated one is filtered out
         assert.equal(2, orgs.length);
         assert.noDifferences([orgIds[0], orgIds[2]], _.map(orgs, 'orgId'));

@@ -1,4 +1,3 @@
-var _ = require('lodash');
 var async = require('async');
 var shortid = require('shortid');
 var assert = require('assert');
@@ -7,7 +6,7 @@ require('dash-assert');
 
 describe('env', function() {
   var dynamo = require('./dynamo-local');
-	var self;
+  var self;
 
   beforeEach(function() {
     self = this;
@@ -24,7 +23,6 @@ describe('env', function() {
   });
 
   it('sets new variable for non-existent environment', function(done) {
-    var self = this;
     var key = 'DB_CONNECTION';
     var value = 'connection_string';
 
@@ -54,8 +52,7 @@ describe('env', function() {
   });
 
   it('new variable for existing environment', function(done) {
-    var self = this;
-    var key = 'KEY', value='value';
+    var key = 'KEY', value = 'value';
 
     this.appData.env[this.envName] = {};
 
@@ -85,8 +82,7 @@ describe('env', function() {
   });
 
   it('update existing env variable', function(done) {
-    var self = this;
-    var key = 'KEY', value='value';
+    var key = 'KEY', value = 'value';
 
     this.appData.env[this.envName] = {key: 'old_value'};
 
@@ -148,7 +144,6 @@ describe('env', function() {
   });
 
   it('deletes existing env variable', function(done) {
-    var key = 'KEY';
     this.appData.env.test = {
       'KEY': {
         value: 'old_value'

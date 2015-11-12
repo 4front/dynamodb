@@ -9,6 +9,10 @@ describe('Application', function() {
   var dynamo = require('./dynamo-local');
   var self;
 
+  // before(function() {
+  //
+  // });
+
   beforeEach(function() {
     self = this;
     this.appData = {
