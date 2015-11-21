@@ -266,4 +266,41 @@ describe('Application', function() {
       }
     ], done);
   });
+
+  it('deletes traffic rules for env', function(done) {
+    var appData = {
+      appId: shortid.generate(),
+      orgId: shortid.generate(),
+      ownerId: shortid.generate(),
+      name: 'app-name-' + shortid.generate(),
+      trafficRules: {
+        prod: [
+          {version: 'v1', rule: '*'}
+        ],
+        test: [
+          {version: 'v3', rule: '*'}
+        ]
+      }
+    };
+
+    async.series([
+      function(cb) {
+        dynamo.createApplication(appData, cb);
+      },
+      function(cb) {
+        // split traffic 50/50 with v10
+        dynamo.deleteTrafficRules(appData.appId, 'test', cb);
+      },
+      function(cb) {
+        dynamo.getApplication(appData.appId, function(err, app) {
+          if (err) return cb(err);
+
+          // verify that the test environment remained unchanged.
+          assert.deepEqual(app.trafficRules.prod, [{version: 'v1', rule: '*'}]);
+          assert.isUndefined(app.trafficRules.test);
+          cb();
+        });
+      }
+    ], done);
+  });
 });
