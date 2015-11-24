@@ -131,7 +131,7 @@ describe('Organization', function() {
       function(cb) {
         dynamo.getOrgMember(self.orgData.orgId, userId, function(err, member) {
           if (err) return cb(err);
-          assert.ok(member == null);
+          assert.ok(member === null);
           cb();
         });
       }
@@ -183,6 +183,27 @@ describe('Organization', function() {
           if (err) return cb(err);
 
           assert.equal(members.length, 0);
+          cb();
+        });
+      }
+    ], done);
+  });
+
+  it('deletes organization', function(done) {
+    async.series([
+      function(cb) {
+        dynamo.createOrganization(self.orgData, cb);
+      },
+      function(cb) {
+        dynamo.createOrgMember({orgId: self.orgData.orgId, userId: shortid.generate(), role: 'admin'}, cb);
+      },
+      function(cb) {
+        dynamo.deleteOrganization(self.orgData.orgId, cb);
+      },
+      function(cb) {
+        dynamo.getOrganization(self.orgData.orgId, function(err, org) {
+          if (err) return cb(err);
+          assert.isNull(org);
           cb();
         });
       }
