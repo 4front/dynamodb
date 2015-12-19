@@ -117,6 +117,8 @@ describe('Application', function() {
   });
 
   it('deletes application', function(done) {
+    var customDomain = shortid.generate() + '.domain.com';
+
     async.series([
       function(cb) {
         dynamo.createApplication(self.appData, cb);
@@ -135,7 +137,7 @@ describe('Application', function() {
       function(cb) {
         dynamo.createDomain({
           appId: self.appData.appId,
-          domain: shortid.generate() + '.domain.com',
+          domain: customDomain,
           zone: shortid.generate(),
           orgId: self.appData.orgId
         }, cb);
@@ -147,6 +149,14 @@ describe('Application', function() {
         dynamo.getApplication(self.appData.appId, function(err, app) {
           if (err) return cb(err);
           assert.ok(_.isNull(app));
+          cb();
+        });
+      },
+      function(cb) {
+        dynamo.getDomain(customDomain, function(err, domain) {
+          if (err) return cb(err);
+
+          assert.isUndefined(domain.appId);
           cb();
         });
       }
