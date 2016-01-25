@@ -1,4 +1,3 @@
-var _ = require('lodash');
 var async = require('async');
 var shortid = require('shortid');
 var assert = require('assert');
@@ -7,10 +6,8 @@ require('dash-assert');
 
 describe('keyValueMap', function() {
   var dynamo = require('./dynamo-local');
-	var self;
 
   beforeEach(function() {
-    self = this;
   });
 
   it('writes mapKey for brand new keyValue', function(done) {
@@ -18,14 +15,14 @@ describe('keyValueMap', function() {
     var mapKey = shortid.generate();
     var mapValue = {
       foo: 1,
-      bar: "hello"
+      bar: 'hello'
     };
 
     dynamo.setKeyMapValue(key, mapKey, mapValue, function(err) {
       if (err) return done(err);
 
-      dynamo.getKeyMapValue(key, mapKey, function(err, value) {
-        if (err) return done(err);
+      dynamo.getKeyMapValue(key, mapKey, function(_err, value) {
+        if (_err) return done(_err);
 
         assert.deepEqual(value, mapValue);
 
