@@ -97,7 +97,7 @@ describe('Certificate', function() {
         // Create a domain bound to this cert
         dynamo.createDomain({
           domain: domains[0],
-          certificate: cert.name,
+          certificateId: cert.certificateId,
           zone: cert.zone,
           orgId: cert.orgId
         }, cb);
