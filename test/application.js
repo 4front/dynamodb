@@ -29,7 +29,10 @@ describe('Application', function() {
   });
 
   it('create and retrieve application', function(done) {
-    var customDomain = 'www.' + shortid.generate() + '.com';
+    _.extend(this.appData, {
+      domainName: shortid.generate() + '.com',
+      subDomain: 'www'
+    });
 
     async.series([
       function(cb) {
@@ -37,28 +40,51 @@ describe('Application', function() {
           if (err) return cb(err);
 
           assert.isMatch(app, self.appData);
-          // assert.deepEqual(appData, _.pick(app, _.keys(self.appData)));
           cb();
         });
       },
       function(cb) {
-        dynamo.createDomain({
-          appId: self.appData.appId,
-          orgId: self.appData.orgId,
-          domain: customDomain,
-          zone: shortid.generate(),
-          action: 'resolve'}, cb);
+        dynamo.getAppIdByDomainName(self.appData.domainName, self.appData.subDomain, function(err, appId) {
+          if (err) return cb(err);
+          assert.equal(appId, self.appData.appId);
+          cb();
+        });
       },
       function(cb) {
         dynamo.getApplication(self.appData.appId, function(err, app) {
           if (err) return cb(err);
 
           assert.isMatch(app, self.appData);
-          assert.equal(app.domains.length, 1);
-          assert.equal(app.domains[0].domain, customDomain);
-
           cb();
         });
+      }
+    ], done);
+  });
+
+  it('create application with existing domainName', function(done) {
+    _.extend(this.appData, {
+      domainName: shortid.generate() + '.com',
+      subDomain: 'www'
+    });
+
+    async.series([
+      function(cb) {
+        dynamo.createApplication(self.appData, cb);
+      },
+      function(cb) {
+        self.appData.appId = shortid.generate();
+        self.appData.name = 'app-name-' + shortid.generate();
+
+        dynamo.createApplication(self.appData, function(err) {
+          assert.equal(err.code, 'domainNameTaken');
+          cb();
+        });
+      },
+      function(cb) {
+        self.appData.subDomain = 'www2';
+
+        // Create another app with same domainName but different subDomain
+        dynamo.createApplication(self.appData, cb);
       }
     ], done);
   });
@@ -113,8 +139,6 @@ describe('Application', function() {
   });
 
   it('deletes application', function(done) {
-    var customDomain = shortid.generate() + '.domain.com';
-
     async.series([
       function(cb) {
         dynamo.createApplication(self.appData, cb);
@@ -131,28 +155,12 @@ describe('Application', function() {
         }, cb);
       },
       function(cb) {
-        dynamo.createDomain({
-          appId: self.appData.appId,
-          domain: customDomain,
-          zone: shortid.generate(),
-          orgId: self.appData.orgId
-        }, cb);
-      },
-      function(cb) {
         dynamo.deleteApplication(self.appData.appId, cb);
       },
       function(cb) {
         dynamo.getApplication(self.appData.appId, function(err, app) {
           if (err) return cb(err);
           assert.ok(_.isNull(app));
-          cb();
-        });
-      },
-      function(cb) {
-        dynamo.getDomain(customDomain, function(err, domain) {
-          if (err) return cb(err);
-
-          assert.isUndefined(domain.appId);
           cb();
         });
       }
