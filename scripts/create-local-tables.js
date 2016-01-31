@@ -24,6 +24,7 @@ var dynamoDb = new AWS.DynamoDB({
 vogels.dynamoDriver(dynamoDb);
 
 var models = _.keys(modelDefinitions);
+// var models = ['Domain'];
 
 async.eachSeries(models, function(type, cb) {
   var defn = modelDefinitions[type];
