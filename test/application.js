@@ -160,7 +160,7 @@ describe('Application', function() {
       function(cb) {
         dynamo.getApplication(self.appData.appId, function(err, app) {
           if (err) return cb(err);
-          assert.ok(_.isNull(app));
+          assert.isNull(app);
           cb();
         });
       }
