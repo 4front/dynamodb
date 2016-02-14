@@ -317,4 +317,36 @@ describe('Application', function() {
       }
     ], done);
   });
+
+  it('gets apps for domainName', function(done) {
+    var domainName = shortid.generate() + '.net';
+    var ownerId = shortid.generate();
+    var orgId = shortid.generate();
+
+    var appData = _.times(3, function(n) {
+      return _.extend({}, appData, {
+        appId: shortid.generate(),
+        orgId: orgId,
+        ownerId: ownerId,
+        name: 'app-name-' + shortid.generate(),
+        domainName: domainName,
+        subDomain: n.toString()
+      });
+    });
+
+    async.series([
+      function(cb) {
+        async.each(appData, dynamo.createApplication.bind(dynamo), cb);
+      },
+      function(cb) {
+        dynamo.getAppsByDomain(domainName, function(err, data) {
+          if (err) return cb(err);
+
+          // debugger;
+          assert.noDifferences(['0', '1', '2'], _.map(data, 'subDomain'));
+          cb();
+        });
+      }
+    ], done);
+  });
 });
