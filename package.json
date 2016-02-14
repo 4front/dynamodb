@@ -16,7 +16,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "async": "^1.5.1",
-    "aws-sdk": "^2.2.26",
+    "aws-sdk": "^2.2.33",
     "camel-case": "^1.2.2",
     "debug": "^2.2.0",
     "joi": "^5.1.0",
