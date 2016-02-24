@@ -342,7 +342,6 @@ describe('Application', function() {
         dynamo.getAppsByDomain(domainName, function(err, data) {
           if (err) return cb(err);
 
-          // debugger;
           assert.noDifferences(['0', '1', '2'], _.map(data, 'subDomain'));
           cb();
         });
