@@ -2,7 +2,7 @@ var _ = require('lodash');
 var async = require('async');
 var shortid = require('shortid');
 var assert = require('assert');
-var moment = require('moment');
+var dateformat = require('dateformat');
 
 require('dash-assert');
 
@@ -214,7 +214,7 @@ describe('Organization', function() {
     var orgId = shortid.generate();
     var appId = shortid.generate();
     var operation = 'html-page';
-    var date = moment().format('YYYY-MM-DD');
+    var date = dateformat(new Date(), 'YYYY-MM-DD');
 
     async.series([
       function(cb) {
