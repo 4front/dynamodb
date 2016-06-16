@@ -6,6 +6,9 @@ module.exports = new DynamoDb({
   accessKeyId: '4front',
   secretAccessKey: '4front',
   tablePrefix: '4front_',
+  metrics: {
+    increment: function() {}
+  },
   crypto: {
     // Just for testing purposes obviously.
     encrypt: function(value) {
