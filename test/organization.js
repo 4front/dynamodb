@@ -2,7 +2,6 @@ var _ = require('lodash');
 var async = require('async');
 var shortid = require('shortid');
 var assert = require('assert');
-var dateformat = require('dateformat');
 
 require('dash-assert');
 
@@ -152,7 +151,8 @@ describe('Organization', function() {
         dynamo.createOrgMember({orgId: self.orgData.orgId, userId: userIds[0], role: 'admin'}, cb);
       },
       function(cb) {
-        dynamo.createOrgMember({orgId: self.orgData.orgId, userId: userIds[1], role: 'contributor'}, cb);
+        dynamo.createOrgMember({orgId: self.orgData.orgId,
+          userId: userIds[1], role: 'contributor'}, cb);
       },
       function(cb) {
         dynamo.listOrgMembers(self.orgData.orgId, function(err, members) {
@@ -195,7 +195,8 @@ describe('Organization', function() {
         dynamo.createOrganization(self.orgData, cb);
       },
       function(cb) {
-        dynamo.createOrgMember({orgId: self.orgData.orgId, userId: shortid.generate(), role: 'admin'}, cb);
+        dynamo.createOrgMember({orgId: self.orgData.orgId,
+          userId: shortid.generate(), role: 'admin'}, cb);
       },
       function(cb) {
         dynamo.deleteOrganization(self.orgData.orgId, cb);
@@ -204,39 +205,6 @@ describe('Organization', function() {
         dynamo.getOrganization(self.orgData.orgId, function(err, org) {
           if (err) return cb(err);
           assert.isNull(org);
-          cb();
-        });
-      }
-    ], done);
-  });
-
-  it('increment daily operations', function(done) {
-    var orgId = shortid.generate();
-    var appId = shortid.generate();
-    var operation = 'html-page';
-    var date = dateformat(new Date(), 'YYYY-MM-DD');
-
-    async.series([
-      function(cb) {
-        dynamo.incrementDailyOperations(orgId, appId, operation, cb);
-      },
-      function(cb) {
-        dynamo.getDailyOperationsByOrg(orgId, date, date, function(err, data) {
-          if (err) return cb(err);
-          assert.equal(1, data[0].operationCounts[operation]);
-          assert.equal(1, data[0].total);
-          cb();
-        });
-      },
-      function(cb) {
-        dynamo.incrementDailyOperations(orgId, appId, operation, cb);
-      },
-      function(cb) {
-        dynamo.getDailyOperationsByOrg(orgId, date, date, function(err, data) {
-          if (err) return cb(err);
-
-          assert.equal(2, data[0].operationCounts[operation]);
-          assert.equal(2, data[0].total);
           cb();
         });
       }
