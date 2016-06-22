@@ -49,7 +49,6 @@ describe('Application', function() {
       function(cb) {
         dynamo.getAppByDomainName(domainName, subDomain, function(err, app) {
           if (err) return cb(err);
-          debugger;
           assert.isMatch(app, self.appData);
           cb();
         });
