@@ -29,9 +29,12 @@ describe('Application', function() {
   });
 
   it('create and retrieve application', function(done) {
+    var domainName = shortid.generate() + '.com';
+    var subDomain = 'www';
+
     _.extend(this.appData, {
-      domainName: shortid.generate() + '.com',
-      subDomain: 'www'
+      domainName: domainName,
+      subDomain: subDomain
     });
 
     async.series([
@@ -44,16 +47,9 @@ describe('Application', function() {
         });
       },
       function(cb) {
-        dynamo.getAppIdByDomainName(self.appData.domainName, self.appData.subDomain, function(err, appId) {
+        dynamo.getAppByDomainName(domainName, subDomain, function(err, app) {
           if (err) return cb(err);
-          assert.equal(appId, self.appData.appId);
-          cb();
-        });
-      },
-      function(cb) {
-        dynamo.getApplication(self.appData.appId, function(err, app) {
-          if (err) return cb(err);
-
+          debugger;
           assert.isMatch(app, self.appData);
           cb();
         });

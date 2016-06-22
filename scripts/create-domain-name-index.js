@@ -24,7 +24,7 @@ dynamoDb.updateTable({
   GlobalSecondaryIndexUpdates: [
     {
       Create: {
-        IndexName: 'domainNameIndex',
+        IndexName: 'domainNameIndex2',
         KeySchema: [
           {
             AttributeName: 'domainName',
@@ -36,7 +36,7 @@ dynamoDb.updateTable({
           }
         ],
         Projection: {
-          ProjectionType: 'KEYS_ONLY'
+          ProjectionType: 'ALL'
         },
         ProvisionedThroughput: {
           ReadCapacityUnits: 1,
