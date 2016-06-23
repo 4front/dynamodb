@@ -44,22 +44,30 @@ describe('Organization', function() {
     ], done);
   });
 
-  it('list appIds', function(done) {
+  it('lists organization websites', function(done) {
     var orgId = shortid.generate();
-    var userId = shortid.generate();
-    var appIds = _.times(3, function() {
-      return shortid.generate();
+    var appDataArray = _.times(3, function() {
+      var appId = shortid.generate();
+      return {
+        appId: appId,
+        ownerId: shortid.generate(),
+        orgId: orgId,
+        name: 'app-' + appId
+      };
     });
 
     async.series([
       function(cb) {
-        async.each(appIds, function(appId, cb1) {
-          dynamo.models.Application.create({appId: appId, orgId: orgId, ownerId: userId}, cb1);
+        async.each(appDataArray, function(appData, cb1) {
+          dynamo.createApplication(appData, cb1);
         }, cb);
       },
       function(cb) {
-        dynamo.listOrgAppIds(orgId, function(err, ids) {
-          assert.noDifferences(ids, appIds);
+        dynamo.listOrgApplications(orgId, function(err, orgApps) {
+          if (err) return cb(err);
+          assert.equal(orgApps.length, 3);
+          assert.noDifferences(_.map(appDataArray, 'appId'), _.map(orgApps, 'appId'));
+          assert.noDifferences(_.map(appDataArray, 'name'), _.map(orgApps, 'name'));
           cb();
         });
       }
