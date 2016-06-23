@@ -52,6 +52,13 @@ describe('Application', function() {
           assert.isMatch(app, self.appData);
           cb();
         });
+      },
+      function(cb) {
+        dynamo.getAppIdByDomainName(domainName, subDomain, function(err, appId) {
+          if (err) return cb(err);
+          assert.equal(appId, self.appData.appId);
+          cb();
+        });
       }
     ], done);
   });
