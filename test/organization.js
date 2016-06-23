@@ -70,6 +70,13 @@ describe('Organization', function() {
           assert.noDifferences(_.map(appDataArray, 'name'), _.map(orgApps, 'name'));
           cb();
         });
+      },
+      function(cb) {
+        dynamo.countOrgApplications(orgId, function(err, count) {
+          if (err) return cb(err);
+          assert.equal(3, count);
+          cb();
+        });
       }
     ], done);
   });

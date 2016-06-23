@@ -4,10 +4,9 @@ var AWS = require('aws-sdk');
 
 // Connect to DynamoDB local
 var dynamoDb = new AWS.DynamoDB({
-  region: 'eu-central-1'
-  // endpoint: 'http://localhost:8000',
-  // accessKeyId: '4front',
-  // secretAccessKey: '4front'
+  endpoint: 'http://localhost:8000',
+  accessKeyId: '4front',
+  secretAccessKey: '4front'
 });
 
 // Create the domainNameIndex on the applications table.
