@@ -2,16 +2,18 @@ var _ = require('lodash');
 var async = require('async');
 var shortid = require('shortid');
 var assert = require('assert');
+var sinon = require('sinon');
 var debug = require('debug')('4front:dynamo:version:test');
 
 require('dash-assert');
 
 describe('Version', function() {
   var self;
-  var dynamo = require('./dynamo-local');
 
   beforeEach(function() {
     self = this;
+
+    this.dynamo = require('./dynamo-local');
 
     this.versionDefaults = {
       versionId: shortid.generate(),
@@ -29,7 +31,7 @@ describe('Version', function() {
   it('create version', function(done) {
     async.series([
       function(cb) {
-        dynamo.createVersion(self.versionDefaults, function(err, version) {
+        self.dynamo.createVersion(self.versionDefaults, function(err, version) {
           if (err) debug('error creating version');
           if (err) return cb(err);
           assert.equal(version.versionId, self.versionDefaults.versionId);
@@ -37,7 +39,9 @@ describe('Version', function() {
         });
       },
       function(cb) {
-        dynamo.getVersion(self.versionDefaults.appId, self.versionDefaults.versionId, function(err, version) {
+        var appId = self.versionDefaults.appId;
+        var versionId = self.versionDefaults.versionId;
+        self.dynamo.getVersion(appId, versionId, function(err, version) {
           if (err) debug('error getting version');
           if (err) return cb(err);
 
@@ -63,11 +67,11 @@ describe('Version', function() {
     });
 
     async.each(versionData, function(data, cb) {
-      dynamo.createVersion(data, cb);
+      self.dynamo.createVersion(data, cb);
     }, function(err) {
       if (err) return done(err);
 
-      dynamo.listVersions(self.versionDefaults.appId, {}, function(_err, versions) {
+      self.dynamo.listVersions(self.versionDefaults.appId, {}, function(_err, versions) {
         if (_err) return done(_err);
 
         assert.equal(maxVersionNum, versions.length);
@@ -80,16 +84,17 @@ describe('Version', function() {
     var appId = shortid.generate();
     async.series([
       function(cb) {
-        dynamo.nextVersionNum(appId, function(err, versionNum) {
+        self.dynamo.nextVersionNum(appId, function(err, versionNum) {
           assert.equal(1, versionNum);
           cb();
         });
       },
       function(cb) {
-        dynamo.createVersion(_.extend(self.versionDefaults, {appId: appId, versionNum: 1}), cb);
+        self.dynamo.createVersion(_.extend(self.versionDefaults,
+          {appId: appId, versionNum: 1}), cb);
       },
       function(cb) {
-        dynamo.nextVersionNum(appId, function(err, versionNum) {
+        self.dynamo.nextVersionNum(appId, function(err, versionNum) {
           assert.equal(2, versionNum);
           cb();
         });
@@ -101,13 +106,15 @@ describe('Version', function() {
     var appId = shortid.generate();
     async.series([
       function(cb) {
-        dynamo.createVersion(_.extend(self.versionDefaults, {appId: appId, versionNum: 1, versionId: shortid.generate()}), cb);
+        self.dynamo.createVersion(_.extend(self.versionDefaults,
+          {appId: appId, versionNum: 1, versionId: shortid.generate()}), cb);
       },
       function(cb) {
-        dynamo.createVersion(_.extend(self.versionDefaults, {appId: appId, versionNum: 2, versionId: shortid.generate()}), cb);
+        self.dynamo.createVersion(_.extend(self.versionDefaults,
+          {appId: appId, versionNum: 2, versionId: shortid.generate()}), cb);
       },
       function(cb) {
-        dynamo.mostRecentVersion(appId, function(err, mostRecentVersion) {
+        self.dynamo.mostRecentVersion(appId, function(err, mostRecentVersion) {
           if (err) return cb(err);
           // assert.isDefined(mostRecentVersion);
           assert.equal(2, mostRecentVersion.versionNum);
@@ -123,7 +130,7 @@ describe('Version', function() {
 
     async.series([
       function(cb) {
-        dynamo.createVersion(versionData, cb);
+        self.dynamo.createVersion(versionData, cb);
       },
       function(cb) {
         _.extend(versionData, {
@@ -131,10 +138,10 @@ describe('Version', function() {
           message: 'new message'
         });
 
-        dynamo.updateVersion(versionData, cb);
+        self.dynamo.updateVersion(versionData, cb);
       },
       function(cb) {
-        dynamo.getVersion(versionData.appId, versionData.versionId, function(err, version) {
+        self.dynamo.getVersion(versionData.appId, versionData.versionId, function(err, version) {
           assert.isMatch(version, _.pick(versionData, 'name', 'message'));
           cb();
         });
@@ -155,11 +162,11 @@ describe('Version', function() {
     });
 
     async.each(versionData, function(data, cb) {
-      dynamo.createVersion(data, cb);
+      self.dynamo.createVersion(data, cb);
     }, function(err) {
       if (err) return done(err);
 
-      dynamo.getVersionCount(self.versionDefaults.appId, function(_err, count) {
+      self.dynamo.getVersionCount(self.versionDefaults.appId, function(_err, count) {
         if (_err) return done(_err);
 
         assert.equal(4, count);
@@ -171,11 +178,34 @@ describe('Version', function() {
   it('deletes version', function(done) {
     async.series([
       function(cb) {
-        dynamo.createVersion(self.versionDefaults, cb);
+        self.dynamo.createVersion(self.versionDefaults, cb);
       },
       function(cb) {
-        dynamo.deleteVersion(self.versionDefaults.appId, self.versionDefaults.versionId, cb);
+        self.dynamo.deleteVersion(self.versionDefaults.appId,
+          self.versionDefaults.versionId, cb);
       }
     ], done);
+  });
+
+  it('triggers lazy replicator when versionId not found', function(done) {
+    this.dynamo.options.lazyReplicator = {
+      trigger: sinon.spy(function() {})
+    };
+
+    var appId = shortid.generate();
+    var versionId = shortid.generate();
+    self.dynamo.getVersion(appId, versionId, function(err, version) {
+      assert.isEmpty(version);
+      assert.isTrue(self.dynamo.options.lazyReplicator.trigger.calledWith({
+        source: 'dynamodb',
+        tableName: '4front_versions',
+        region: 'us-west-2',
+        keys: {
+          appId: {S: appId}, //eslint-disable-line
+          versionId: {S: versionId} //eslint-disable-line
+        }
+      }));
+      done();
+    });
   });
 });

@@ -2,15 +2,18 @@ var _ = require('lodash');
 var async = require('async');
 var shortid = require('shortid');
 var assert = require('assert');
+var sinon = require('sinon');
 
 require('dash-assert');
 
 describe('Application', function() {
-  var dynamo = require('./dynamo-local');
   var self;
 
   beforeEach(function() {
     self = this;
+
+    this.dynamo = require('./dynamo-local');
+
     this.appData = {
       appId: shortid.generate(),
       orgId: shortid.generate(),
@@ -39,7 +42,7 @@ describe('Application', function() {
 
     async.series([
       function(cb) {
-        dynamo.createApplication(self.appData, function(err, app) {
+        self.dynamo.createApplication(self.appData, function(err, app) {
           if (err) return cb(err);
 
           assert.isMatch(app, self.appData);
@@ -47,14 +50,14 @@ describe('Application', function() {
         });
       },
       function(cb) {
-        dynamo.getAppByDomainName(domainName, subDomain, function(err, app) {
+        self.dynamo.getAppByDomainName(domainName, subDomain, function(err, app) {
           if (err) return cb(err);
           assert.isMatch(app, self.appData);
           cb();
         });
       },
       function(cb) {
-        dynamo.getAppIdByDomainName(domainName, subDomain, function(err, appId) {
+        self.dynamo.getAppIdByDomainName(domainName, subDomain, function(err, appId) {
           if (err) return cb(err);
           assert.equal(appId, self.appData.appId);
           cb();
@@ -71,13 +74,13 @@ describe('Application', function() {
 
     async.series([
       function(cb) {
-        dynamo.createApplication(self.appData, cb);
+        self.dynamo.createApplication(self.appData, cb);
       },
       function(cb) {
         self.appData.appId = shortid.generate();
         self.appData.name = 'app-name-' + shortid.generate();
 
-        dynamo.createApplication(self.appData, function(err) {
+        self.dynamo.createApplication(self.appData, function(err) {
           assert.equal(err.code, 'domainNameTaken');
           cb();
         });
@@ -86,7 +89,7 @@ describe('Application', function() {
         self.appData.subDomain = 'www2';
 
         // Create another app with same domainName but different subDomain
-        dynamo.createApplication(self.appData, cb);
+        self.dynamo.createApplication(self.appData, cb);
       }
     ], done);
   });
@@ -96,10 +99,10 @@ describe('Application', function() {
 
     async.series([
       function(cb) {
-        dynamo.createApplication(self.appData, cb);
+        self.dynamo.createApplication(self.appData, cb);
       },
       function(cb) {
-        dynamo.getApplicationByName(self.appData.name, function(err, app) {
+        self.dynamo.getApplicationByName(self.appData.name, function(err, app) {
           if (err) return cb(err);
 
           assert.isMatch(app, self.appData);
@@ -113,10 +116,10 @@ describe('Application', function() {
     self = this;
     async.series([
       function(cb) {
-        dynamo.models.AppName.create({name: self.appData.name, appId: shortid.generate()}, cb);
+        self.dynamo.models.AppName.create({name: self.appData.name, appId: shortid.generate()}, cb);
       },
       function(cb) {
-        dynamo.createApplication(self.appData, function(err) {
+        self.dynamo.createApplication(self.appData, function(err) {
           assert.ok(err);
           assert.equal(err.code, 'appNameExists');
           cb();
@@ -129,10 +132,10 @@ describe('Application', function() {
     var appName = {name: shortid.generate(), appId: shortid.generate()};
     async.series([
       function(cb) {
-        dynamo.models.AppName.create(appName, cb);
+        self.dynamo.models.AppName.create(appName, cb);
       },
       function(cb) {
-        dynamo.getAppName(appName.name, function(err, name) {
+        self.dynamo.getAppName(appName.name, function(err, name) {
           assert.deepEqual(name, appName);
           cb();
         });
@@ -143,11 +146,11 @@ describe('Application', function() {
   it('deletes application', function(done) {
     async.series([
       function(cb) {
-        dynamo.createApplication(self.appData, cb);
+        self.dynamo.createApplication(self.appData, cb);
       },
       function(cb) {
         // Create a version
-        dynamo.createVersion({
+        self.dynamo.createVersion({
           appId: self.appData.appId,
           versionId: shortid.generate(),
           name: 'v1',
@@ -157,10 +160,10 @@ describe('Application', function() {
         }, cb);
       },
       function(cb) {
-        dynamo.deleteApplication(self.appData.appId, cb);
+        self.dynamo.deleteApplication(self.appData.appId, cb);
       },
       function(cb) {
-        dynamo.getApplication(self.appData.appId, function(err, app) {
+        self.dynamo.getApplication(self.appData.appId, function(err, app) {
           if (err) return cb(err);
           assert.isNull(app);
           cb();
@@ -182,13 +185,13 @@ describe('Application', function() {
     // First create an application
     async.series([
       function(cb) {
-        dynamo.createApplication(appData, cb);
+        self.dynamo.createApplication(appData, cb);
       },
       function(cb) {
-        dynamo.updateApplication(updatedData, cb);
+        self.dynamo.updateApplication(updatedData, cb);
       },
       function(cb) {
-        dynamo.getApplication(appData.appId, function(err, app) {
+        self.dynamo.getApplication(appData.appId, function(err, app) {
           if (err) return cb(err);
 
           assert.equal(app.name, updatedData.name);
@@ -203,13 +206,13 @@ describe('Application', function() {
 
     async.series([
       function(cb) {
-        dynamo.createApplication(self.appData, cb);
+        self.dynamo.createApplication(self.appData, cb);
       },
       function(cb) {
-        dynamo.transferApplication(self.appData.appId, newOrgId, cb);
+        self.dynamo.transferApplication(self.appData.appId, newOrgId, cb);
       },
       function(cb) {
-        dynamo.getApplication(self.appData.appId, function(err, app) {
+        self.dynamo.getApplication(self.appData.appId, function(err, app) {
           if (err) return cb(err);
           assert.equal(app.orgId, newOrgId);
           cb();
@@ -227,7 +230,7 @@ describe('Application', function() {
     async.series([
       function(cb) {
         async.each(appIds, function(appId, cb1) {
-          dynamo.createApplication(_.extend({}, self.appData, {
+          self.dynamo.createApplication(_.extend({}, self.appData, {
             appId: appId,
             name: 'app-' + appId,
             ownerId: userId
@@ -235,7 +238,7 @@ describe('Application', function() {
         }, cb);
       },
       function(cb) {
-        dynamo.userApplications(userId, function(err, userAppIds) {
+        self.dynamo.userApplications(userId, function(err, userAppIds) {
           assert.equal(userAppIds.length, 3);
           assert.noDifferences(appIds, userAppIds);
           cb();
@@ -264,14 +267,14 @@ describe('Application', function() {
 
     async.series([
       function(cb) {
-        dynamo.createApplication(appData, cb);
+        self.dynamo.createApplication(appData, cb);
       },
       function(cb) {
         // split traffic 50/50 with v10
-        dynamo.updateTrafficRules(appData.appId, 'production', updatedRules, cb);
+        self.dynamo.updateTrafficRules(appData.appId, 'production', updatedRules, cb);
       },
       function(cb) {
-        dynamo.getApplication(appData.appId, function(err, app) {
+        self.dynamo.getApplication(appData.appId, function(err, app) {
           if (err) return cb(err);
 
           // verify that the test environment remained unchanged.
@@ -301,14 +304,14 @@ describe('Application', function() {
 
     async.series([
       function(cb) {
-        dynamo.createApplication(appData, cb);
+        self.dynamo.createApplication(appData, cb);
       },
       function(cb) {
         // split traffic 50/50 with v10
-        dynamo.deleteTrafficRules(appData.appId, 'test', cb);
+        self.dynamo.deleteTrafficRules(appData.appId, 'test', cb);
       },
       function(cb) {
-        dynamo.getApplication(appData.appId, function(err, app) {
+        self.dynamo.getApplication(appData.appId, function(err, app) {
           if (err) return cb(err);
 
           // verify that the test environment remained unchanged.
@@ -338,10 +341,10 @@ describe('Application', function() {
 
     async.series([
       function(cb) {
-        async.each(appData, dynamo.createApplication.bind(dynamo), cb);
+        async.each(appData, self.dynamo.createApplication.bind(self.dynamo), cb);
       },
       function(cb) {
-        dynamo.getAppsByDomain(domainName, function(err, data) {
+        self.dynamo.getAppsByDomain(domainName, function(err, data) {
           if (err) return cb(err);
 
           assert.noDifferences(['0', '1', '2'], _.map(data, 'subDomain'));
@@ -349,5 +352,82 @@ describe('Application', function() {
         });
       }
     ], done);
+  });
+
+  describe('triggers lazy replicator', function() {
+    beforeEach(function() {
+      self = this;
+      this.dynamo.options.lazyReplicator = {
+        trigger: sinon.spy(function() {})
+      };
+    });
+
+    it('when appId is missing', function(done) {
+      var appId = shortid.generate();
+      self.dynamo.getApplication(appId, function(err, app) {
+        assert.isEmpty(app);
+        assert.isTrue(self.dynamo.options.lazyReplicator.trigger.calledWith({
+          source: 'dynamodb',
+          region: 'us-west-2',
+          tableName: '4front_applications',
+          keys: {
+            appId: {S: appId} //eslint-disable-line
+          }
+        }));
+        done();
+      });
+    });
+
+    it('when app domain is missing', function(done) {
+      var domainName = shortid.generate();
+      var subDomain = '@';
+      self.dynamo.getAppByDomainName(domainName, subDomain, function(err, app) {
+        assert.isEmpty(app);
+        assert.isTrue(self.dynamo.options.lazyReplicator.trigger.calledWith({
+          source: 'dynamodb',
+          region: 'us-west-2',
+          tableName: '4front_applications',
+          keys: {
+            domainName: {S: domainName}, //eslint-disable-line
+            subDomain: {S: subDomain} //eslint-disable-line
+          },
+          index: 'domainNameIndex2'
+        }));
+        done();
+      });
+    });
+
+    it('when appName is missing', function(done) {
+      var appName = shortid.generate();
+      self.dynamo.getApplicationByName(appName, function(err, app) {
+        assert.isEmpty(app);
+        assert.isTrue(self.dynamo.options.lazyReplicator.trigger.calledWith({
+          source: 'dynamodb',
+          region: 'us-west-2',
+          tableName: '4front_appName',
+          keys: {
+            name: {S: appName} //eslint-disable-line
+          }
+        }));
+        done();
+      });
+    });
+
+    it('when appId is missing from appName', function(done) {
+      var appId = shortid.generate();
+      self.dynamo._getAppName(appId, function(err, app) {
+        assert.isEmpty(app);
+        assert.isTrue(self.dynamo.options.lazyReplicator.trigger.calledWith({
+          source: 'dynamodb',
+          region: 'us-west-2',
+          tableName: '4front_appName',
+          keys: {
+            appId: {S: appId} //eslint-disable-line
+          },
+          index: 'appIdIndex'
+        }));
+        done();
+      });
+    });
   });
 });
